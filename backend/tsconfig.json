@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
-        "module": "commonjs"
+        "module": "commonjs",
+        "esModuleInterop": true
     },
-    "include": ["./**/*.mts"],
+    "include": ["*.mts", "routes/*.mts", "middleware/*.mts"],
     "exclude": [
         "node_modules"
     ]
