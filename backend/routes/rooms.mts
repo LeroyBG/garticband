@@ -54,3 +54,28 @@ router.post("create", (req, res, next) => {
         roomId: newRoomId
     })
 })
+
+// Add requesting player to existing room
+router.post(":roomId/join", (req, res, next) => {
+    const newPlayerInfo: playerInRoom = {
+        // @ts-ignore -- use declaration merging in the future
+        // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
+        id: req!.userId,
+        timeSinceLastPulse: 0,
+        turnNumber: null,
+        sequencer: {
+            selectionGrid: null,
+            instrumentId: null
+        }
+    }
+
+    // Error case: parsing fails
+    const roomId = parseInt(req.params.roomId, 10)
+    const existingRoom = roomInfoMap.get(roomId)
+
+    // Error case: room doesn't exist
+    // Error case: player already in room
+    existingRoom.players.push(newPlayerInfo)
+
+    res.status(200)
+})
