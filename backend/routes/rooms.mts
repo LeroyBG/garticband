@@ -1,5 +1,9 @@
 import express from 'express'
 import { getAuth } from '../middleware/auth.mjs'
+import { before } from 'node:test'
+
+const ROOM_SIZE = 4 // How many players can be in a room - can change if we choose
+const delay =  (duration: number) => new Promise((resolve => setTimeout(resolve, duration)))
 
 type playerId = string
 type roomId = number | null // null if no instrument selected
@@ -109,4 +113,34 @@ router.post(":roomId/pulse", (req, res, next) => {
         })
     }
     return res.status(200).json(responseData)
+})
+
+// Reset server’s time-since-last pulse value for the user in their current room
+// Starts a long-polling response, where the server repeatedly checks if all players have joined the room
+router.post(":roomId/canStartGame", async (req, res, next) => {
+    const receivedAt = Date.now() - 1000 // Subtract a second to be conservative
+    // Error case: parsing fails
+    // Error case: room doesn't exist
+    // Error case: player not in room
+    const roomId = parseInt(req.params.roomId, 10)
+    const existingRoom = roomInfoMap.get(roomId)
+    const playerToUpdate = existingRoom.players.find((p) => {
+        // @ts-ignore -- use declaration merging in the future
+        // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
+        p.id = req.userId
+    })
+    
+    // Update player's timeSinceLastPulse
+    playerToUpdate.timeSinceLastPulse = 0
+
+    // Check every 2.7 seconds if all players have joined
+    // Quit after 30 seconds to avoid a request timeout
+    while (existingRoom.players.length !== ROOM_SIZE && Date.now() - receivedAt >= 30000) {
+        await delay(2700)
+    }
+    if (Date.now() - receivedAt >= 30000) {
+        return res.status(200).json({
+            canStartGame: false
+        })
+    }
 })
