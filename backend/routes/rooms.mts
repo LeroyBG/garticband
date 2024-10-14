@@ -1,6 +1,5 @@
 import express from 'express'
 import { getAuth } from '../middleware/auth.mjs'
-import { before } from 'node:test'
 
 const ROOM_SIZE = 4 // How many players can be in a room - can change if we choose
 const delay =  (duration: number) => new Promise((resolve => setTimeout(resolve, duration)))
@@ -21,7 +20,8 @@ type playerInRoom = {
 type roomInfo = {
     players: playerInRoom[],
     createdAt: number, // In milliseconds
-    activeTurn: number | null // i.e. 1, 2, 3, 4,..., null if no active turn
+    activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
+    isCompleted: boolean
 }
 
 const roomInfoMap = new Map<roomId, roomInfo>()
@@ -31,7 +31,7 @@ const router = express.Router()
 router.use(getAuth)
 
 // Create a new room and add the requesting client to the room
-router.post("create", (req, res, next) => {
+router.post("/create", (req, res, next) => {
     const newRoomId = Date.now()
 
     const newPlayerInfo: playerInRoom = {
@@ -49,7 +49,8 @@ router.post("create", (req, res, next) => {
     const newRoom: roomInfo = {
         players: [newPlayerInfo],
         createdAt: Date.now(),
-        activeTurn: null
+        activeTurn: null,
+        isCompleted: false
     }
 
     roomInfoMap.set(newRoomId, newRoom)
@@ -60,7 +61,7 @@ router.post("create", (req, res, next) => {
 })
 
 // Add requesting player to existing room
-router.post(":roomId/join", (req, res, next) => {
+router.post("/:roomId/join", (req, res, next) => {
     const newPlayerInfo: playerInRoom = {
         // @ts-ignore -- use declaration merging in the future
         // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
@@ -82,12 +83,12 @@ router.post(":roomId/join", (req, res, next) => {
     // Error case: player already in a different room (?????)
     existingRoom.players.push(newPlayerInfo)
 
-    res.status(200)
+    res.sendStatus(200)
 })
 
 // Pulse requests reset server’s time-since-last pulse value for the requesting user in their current
 // room
-router.post(":roomId/pulse", (req, res, next) => {
+router.post("/:roomId/pulse", (req, res, next) => {
     // Error case: parsing fails
     // Error case: room doesn't exist
     // Error case: player not in room
@@ -117,7 +118,7 @@ router.post(":roomId/pulse", (req, res, next) => {
 
 // Reset server’s time-since-last pulse value for the user in their current room
 // Starts a long-polling response, where the server repeatedly checks if all players have joined the room
-router.post(":roomId/canStartGame", async (req, res, next) => {
+router.post("/:roomId/canStartGame", async (req, res, next) => {
     const receivedAt = Date.now() - 1000 // Subtract a second to be conservative
     // Error case: parsing fails
     // Error case: room doesn't exist
@@ -144,3 +145,33 @@ router.post(":roomId/canStartGame", async (req, res, next) => {
         })
     }
 })
+
+// Updates room data structure with user’s selection grid and instrument used
+// If user is last person to go, updates room game status to done
+router.post("/:roomID/finishMyTurn", (req, res, next) => {
+    // Error case: parsing fails
+    // Error case: room doesn't exist
+    // Error case: player not in room
+    const roomId = parseInt(req.params.roomId, 10)
+    const existingRoom = roomInfoMap.get(roomId)
+    const playerToUpdate = existingRoom.players.find((p) => {
+        // @ts-ignore -- use declaration merging in the future
+        // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
+        p.id = req.userId
+    })
+    
+    // Update player's timeSinceLastPulse
+    playerToUpdate.timeSinceLastPulse = 0
+
+    // Will fail on malformed request
+    playerToUpdate.sequencer = req.body
+
+    if (existingRoom.activeTurn == ROOM_SIZE)
+        existingRoom.isCompleted = true
+
+    existingRoom.activeTurn++
+
+    res.sendStatus(200)
+})
+
+export default router
