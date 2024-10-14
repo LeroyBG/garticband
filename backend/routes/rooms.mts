@@ -33,7 +33,7 @@ router.post("create", (req, res, next) => {
     const newPlayerInfo: playerInRoom = {
         // @ts-ignore -- use declaration merging in the future
         // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
-        id: req!.userId,
+        id: req.userId,
         timeSinceLastPulse: 0,
         turnNumber: null,
         sequencer: {
@@ -60,7 +60,7 @@ router.post(":roomId/join", (req, res, next) => {
     const newPlayerInfo: playerInRoom = {
         // @ts-ignore -- use declaration merging in the future
         // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
-        id: req!.userId,
+        id: req.userId,
         timeSinceLastPulse: 0,
         turnNumber: null,
         sequencer: {
@@ -75,7 +75,38 @@ router.post(":roomId/join", (req, res, next) => {
 
     // Error case: room doesn't exist
     // Error case: player already in room
+    // Error case: player already in a different room (?????)
     existingRoom.players.push(newPlayerInfo)
 
     res.status(200)
+})
+
+// Pulse requests reset server’s time-since-last pulse value for the requesting user in their current
+// room
+router.post(":roomId/pulse", (req, res, next) => {
+    // Error case: parsing fails
+    // Error case: room doesn't exist
+    // Error case: player not in room
+    const roomId = parseInt(req.params.roomId, 10)
+    const existingRoom = roomInfoMap.get(roomId)
+    const playerToUpdate = existingRoom.players.find((p) => {
+        // @ts-ignore -- use declaration merging in the future
+        // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
+        p.id = req.userId
+    })
+    
+    // Update player's timeSinceLastPulse
+    playerToUpdate.timeSinceLastPulse = 0
+
+    const responseData = {
+        ...existingRoom,
+        players: existingRoom.players.map((p) => {
+            return {
+                ...p,
+                connectionStatus: p.timeSinceLastPulse < 4000 ? 'connected' :
+                    p.timeSinceLastPulse < 7000 ? 'unstable' : 'disconnected'
+            }
+        })
+    }
+    return res.status(200).json(responseData)
 })
