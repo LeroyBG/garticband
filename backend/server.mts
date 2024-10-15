@@ -4,6 +4,13 @@ import roomRouter from './routes/rooms.mts'
 import cors from 'cors'
 import morgan from 'morgan'
 
+import { initializeApp, applicationDefault } from 'firebase-admin/app'
+
+initializeApp({
+    credential: applicationDefault(),
+    databaseURL: 'https://<DATABASE_NAME>.firebaseio.com'
+});
+
 const app = express()
 const { PORT } = process.env
 

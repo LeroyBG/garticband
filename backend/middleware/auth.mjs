@@ -1,6 +1,7 @@
-// Extract user id from auth header
-// Dummy function for now
-export const getAuth = (req, res, next) => {
-    req.userId = 'blah'
+import { getAuth } from 'firebase-admin/auth'
+
+export const setAuthInResponse = async (req, res, next) => {
+    const decodedToken = await getAuth().verifyIdToken()
+    req.uid = decodedToken.uid
     next()
 }

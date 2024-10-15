@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAuth } from '../middleware/auth.mjs'
+import { setAuthInResponse } from '../middleware/auth.mjs'
 
 const ROOM_SIZE = 4 // How many players can be in a room - can change if we choose
 const delay =  (duration: number) => new Promise((resolve => setTimeout(resolve, duration)))
@@ -28,7 +28,7 @@ const roomInfoMap = new Map<roomId, roomInfo>()
 
 const router = express.Router()
 
-router.use(getAuth)
+router.use(setAuthInResponse)
 
 // Create a new room and add the requesting client to the room
 router.post("/create", (req, res, next) => {
@@ -37,7 +37,7 @@ router.post("/create", (req, res, next) => {
     const newPlayerInfo: playerInRoom = {
         // @ts-ignore -- use declaration merging in the future
         // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
-        id: req.userId,
+        id: req.uid,
         timeSinceLastPulse: 0,
         turnNumber: null,
         sequencer: {
@@ -65,7 +65,7 @@ router.post("/:roomId/join", (req, res, next) => {
     const newPlayerInfo: playerInRoom = {
         // @ts-ignore -- use declaration merging in the future
         // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
-        id: req.userId,
+        id: req.uid,
         timeSinceLastPulse: 0,
         turnNumber: null,
         sequencer: {
@@ -97,7 +97,7 @@ router.post("/:roomId/pulse", (req, res, next) => {
     const playerToUpdate = existingRoom.players.find((p) => {
         // @ts-ignore -- use declaration merging in the future
         // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
-        p.id = req.userId
+        p.id = req.uid
     })
     
     // Update player's timeSinceLastPulse
@@ -128,7 +128,7 @@ router.post("/:roomId/canStartGame", async (req, res, next) => {
     const playerToUpdate = existingRoom.players.find((p) => {
         // @ts-ignore -- use declaration merging in the future
         // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
-        p.id = req.userId
+        p.id = req.uid
     })
     
     // Update player's timeSinceLastPulse
@@ -148,7 +148,7 @@ router.post("/:roomId/canStartGame", async (req, res, next) => {
 
 // Updates room data structure with user’s selection grid and instrument used
 // If user is last person to go, updates room game status to done
-router.post("/:roomID/finishMyTurn", (req, res, next) => {
+router.post("/:roomId/finishMyTurn", (req, res, next) => {
     // Error case: parsing fails
     // Error case: room doesn't exist
     // Error case: player not in room
@@ -157,7 +157,7 @@ router.post("/:roomID/finishMyTurn", (req, res, next) => {
     const playerToUpdate = existingRoom.players.find((p) => {
         // @ts-ignore -- use declaration merging in the future
         // https://stackoverflow.com/questions/37377731/extend-express-request-object-using-typescript
-        p.id = req.userId
+        p.id = req.uid
     })
     
     // Update player's timeSinceLastPulse
