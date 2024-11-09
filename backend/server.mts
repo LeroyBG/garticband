@@ -18,7 +18,10 @@ const app = express()
 const { PORT, FRONTEND_URL } = process.env
 
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: FRONTEND_URL
+}))
+app.use(express.static('public'))
 app.use(morgan('dev'))
 
 app.use("/rooms", roomRouter)
@@ -28,6 +31,7 @@ const httpServer = createServer(app)
 // * * * * * * * * * * Socket logic * * * * * * * * * *
 // Super temporary mapping of turn number to instruments
 const TURN_DURATION = 60 * 1000 // 1 min
+const NUM_PLAYERS_PER_ROOM = 4
 
 const instruments = [
     "drums",
@@ -56,7 +60,7 @@ const rooms = new Map<roomId, roomInfo>()
 
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173"
+        origin: FRONTEND_URL
     }
 })
 
@@ -89,13 +93,12 @@ io.on("connection", (socket) => {
             rooms.set(data.roomId, room)
             socket.emit("room_joined", { roomId: roomId, roomState: room })
         } else {
-            const MAX_PLAYERS_PER_ROOM = 4
             let playerInRoom = false
             room.players.forEach((v) => {
                 if (v.id == socket.id)
                     playerInRoom = true
             })
-            if (room.players.length >= MAX_PLAYERS_PER_ROOM) {
+            if (room.players.length >= NUM_PLAYERS_PER_ROOM) {
                 console.log("someone tried to join a room that's full")
                 return
             }
@@ -119,6 +122,37 @@ io.on("connection", (socket) => {
             socket.emit("room_joined", { roomId: data.roomId, roomState: room })
             socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room })
         }
+    })
+
+    socket.on("start_game", async (data) => {
+        const room = rooms.get(roomId)
+        room.activeTurn = 1
+        io.to(roomId).emit("game_started", {
+            roomState: room
+        })
+        console.log("started the game")
+        await delay(30 * 1000)
+        for (let i = 1; i <= NUM_PLAYERS_PER_ROOM; i++) {
+            console.log("next turn")
+
+            room.activeTurn++
+            io.to(roomId).emit("new_turn", {
+                roomState: room
+            })
+            await delay(30 * 1000)
+        }
+        room.activeTurn = null
+        room.isCompleted = true
+        io.to(roomId).emit("game_finished", {
+            roomState: room
+        })
+    })
+
+    // Broadcast updates to players' sequencers
+    socket.on("update", ({ selectionGrid }) => {
+        const room = rooms.get(roomId)
+        const player = room.players.find(p => p.id = socket.id)
+        player.sequencer.selectionGrid = selectionGrid
     })
 
     socket.on("disconnect", (reason) => {
