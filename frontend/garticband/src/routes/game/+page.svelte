@@ -9,7 +9,10 @@
     
     {#if gameActive}
         {#if activeTurn}
-            <Composer instrumentId={roomState.players.find(p => p.id == io.id)?.sequencer.instrumentId} />
+            <Composer 
+                timeSteps={32}
+                instrumentId={roomState.players.find(p => p.id == io.id)?.sequencer.instrumentId} 
+            />
         {:else if upNext}
             <UpNext />
         {:else if alreadyWent}
@@ -18,7 +21,9 @@
             <WaitingForPlayers />
         {/if}
     {:else}
-        {#if roomReadyToStart}
+        {#if gameFinished}
+            <FinalComposition roomState={roomState} />
+        {:else if roomReadyToStart}
             <button 
                 type="button"
                 onclick={startGame}>start game</button>
@@ -52,6 +57,7 @@
     import UpNext from "$lib/UpNext.svelte"
     import AlreadyWent from "$lib/AlreadyWent.svelte"
     import WaitingForPlayers from "$lib/WaitingForPlayers.svelte"
+    import FinalComposition from "$lib/FinalComposition.svelte";
 
 
     const URLParams = $page.url.searchParams
@@ -67,6 +73,7 @@
 
     let roomReadyToStart = $derived<boolean>(!roomState.activeTurn && roomState.players.length == 4)
     let gameActive = $derived<boolean>(roomState.activeTurn != null)
+    let gameFinished = $derived<boolean>(roomState.isCompleted)
 
     let upNext = $derived<boolean|null>(
         (roomState.activeTurn && myTurnNumber) ? 
@@ -119,6 +126,10 @@
         })
 
         io.on("new_turn", (data) => {
+            roomState = data.roomState
+        })
+
+        io.on("game_finished", (data) => {
             roomState = data.roomState
         })
         return () => io?.disconnect()

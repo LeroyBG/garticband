@@ -1,0 +1,55 @@
+export const instrumentSamples = {
+    "drums": [
+        "drums/808.wav",
+        "drums/Clap.wav",
+        "drums/Conga-High.wav",
+        "drums/Conga-Low.wav",
+        "drums/Conga-Mid.wav",
+        "drums/Hihat.wav",
+        "drums/Kick-Basic.wav",
+        "drums/Rimshot.wav",
+        "drums/Snare-Bright.wav"
+    ],
+    "bass": [
+        'bass/bass-1.wav',
+        'bass/bass-2.wav',
+        'bass/bass-3.wav',
+        'bass/bass-4.wav',
+        'bass/bass-5.wav',
+        'bass/bass-6.wav',
+        'bass/bass-7.wav',
+        'bass/bass-8.wav',
+        'bass/bass-9.wav',
+        'bass/bass-10.wav',
+        'bass/bass-11.wav',
+        'bass/bass-12.wav'
+    ].reverse(),
+    "piano": [
+        'piano/piano-1.wav',
+        'piano/piano-2.wav',
+        'piano/piano-3.wav',
+        'piano/piano-4.wav',
+        'piano/piano-5.wav',
+        'piano/piano-6.wav',
+        'piano/piano-7.wav',
+        'piano/piano-8.wav',
+        'piano/piano-9.wav',
+        'piano/piano-10.wav',
+        'piano/piano-11.wav',
+        'piano/piano-12.wav'
+    ].reverse(),
+    "synth": [
+        'synth/synth-1.wav',
+        'synth/synth-2.wav',
+        'synth/synth-3.wav',
+        'synth/synth-4.wav',
+        'synth/synth-5.wav',
+        'synth/synth-6.wav',
+        'synth/synth-7.wav',
+        'synth/synth-8.wav',
+        'synth/synth-9.wav',
+        'synth/synth-10.wav',
+        'synth/synth-11.wav',
+        'synth/synth-12.wav'
+    ].reverse(),
+}
