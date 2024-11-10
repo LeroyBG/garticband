@@ -14,21 +14,21 @@
         isCompleted: boolean
     }
 
-    import { instrumentSamples } from "$lib/instrumentSamples";
-    import { sequence } from "@sveltejs/kit/hooks";
     import Composer from "./Composer.svelte";
 
     const { roomState }: { roomState: roomInfo } = $props()
 
+    let tick = $state<number>(0)
+
     let loading = $state(true)
 
     $effect(() => {
+        let intervalId = -1
         const use = async () => {
             loading = false
-
-            // @ts-ignore
-            console.log(roomState.players.map(p => instrumentSamples[p.sequencer.instrumentId]))
-            
+            intervalId = setInterval(() => {
+                tick = (tick + 1) % 32
+            }, 200)
         }
         use()
     })
@@ -37,13 +37,17 @@
 {#if loading}
 <h1>loading...</h1>
 {:else}
-    {#each roomState.players as player}
-    <h3>{player.sequencer.instrumentId}</h3>
-    <Composer
-        instrumentId={player.sequencer.instrumentId}
-        timeSteps={player.sequencer.selectionGrid.length}
-        disabled={true}
-        initialState={player.sequencer.selectionGrid ?? undefined}
-    />
-    {/each}
+    <div class="flex flex-col">
+        {#each roomState.players as player}
+            <h3>{player.sequencer.instrumentId}</h3>
+            
+            <Composer
+                instrumentId={player.sequencer.instrumentId}
+                timeSteps={32}
+                disabled={true}
+                initialState={player.sequencer.selectionGrid ?? undefined}
+                synchronizedTick={tick}
+            />
+        {/each}
+    </div>
 {/if}

@@ -96,14 +96,12 @@
     const startGame = () => {
         io.emit("start_game", {})
     }
-    $inspect(roomState)
     $effect(() => {
         if (!URLParams.get("id")) {
             // Something went wrong...
             return
         }
         const id = URLParams.get("id")
-        console.log("trying to join a room")
         io.emit("join_room", { roomId: id })
 
 

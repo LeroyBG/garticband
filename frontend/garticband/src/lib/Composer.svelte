@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { sequencerState } from "./sequencerState";
     import { PUBLIC_SERVER_URL } from '$env/static/public'
     import { io } from "./socketConnection";
     import { instrumentSamples } from "$lib/instrumentSamples"
+    import { untrack } from 'svelte';
 
     type instrument = "drums" | "piano" | "bass" | "synth"
     interface props {
@@ -14,19 +14,24 @@
     }
     const { instrumentId, disabled, timeSteps, initialState, synchronizedTick }: props = $props()
 
+    let numRows = instrumentSamples[instrumentId].length
+
+    let sequencerState = $state<boolean[][]>(initialState ?? Array(numRows).fill(Array(timeSteps).fill(false)))
+
     let loading = $state<boolean>(true)
 
     let tick = $state<number>(0)
 
-    let sources = $state<(AudioBufferSourceNode|null)[]>(Array(instrumentSamples[instrumentId].length).fill(null))
+    let sources: (AudioBufferSourceNode|null)[] = Array(numRows).fill(null)
 
-    let audioContext = $state<AudioContext>(new AudioContext())
+    let audioContext: AudioContext = new AudioContext()
 
-    let audioBuffers = $state<AudioBuffer[]|null>(null)
+    let audioBuffers: AudioBuffer[]|null = null
 
-    if (disabled && initialState) {
-        $sequencerState = initialState
-    }
+    let asyncEffectRunning = false
+
+    $inspect(synchronizedTick)
+
 
     /*
                                     COL INDEX
@@ -57,25 +62,25 @@
     // #each statement) using 0-based indexing 
     const blackKeyIndices = new Set([1, 3, 5, 8, 10])
     
-    const sequencerStyle = $derived<string[][]>($sequencerState.map((row, i) => {
+    const sequencerStyle = $derived<string[][]>(sequencerState.map((row, i) => {
         return row.map((_, j) => {
             return constructConditionalKeyStyling(
-                $sequencerState[i][j], 
-                tick == j, 
+                sequencerState[i][j], 
+                (synchronizedTick ?? tick) == j, 
                 blackKeyIndices.has(i), 
                 j)
         })
     }))
     
     const updateSelection = (rowIndex: number, colIndex: number) => {
-        if (!disabled) {
-            $sequencerState = $sequencerState.map((row: boolean[], i) => 
+        // if (disabled) {
+        //     return
+        // }
+        sequencerState = sequencerState.map((row: boolean[], i) => 
                 row.map((val, j)=> 
                     (i == rowIndex && j == colIndex) ? (!val) : val
                 )
             )
-        }
-        
         // This could overwhelm the server if a bunch of ppl start spamming
         // buttons
         io.emit("update", {
@@ -95,74 +100,79 @@
     
 
     $effect(() => {
+        console.log("effect ran")
         let interval = -1
         const go = async () => {
+            asyncEffectRunning = true
+            console.log("async brah ran")
             // Grab samples
             const fetchedAudio = await Promise.all(instrumentSamples[instrumentId].map((s)=>fetch(`${PUBLIC_SERVER_URL}/samples/${s}`)))
             const arrayBuffers: ArrayBuffer[] = await Promise.all(fetchedAudio.map((f: Response) => f.arrayBuffer()))
             audioBuffers = await Promise.all(arrayBuffers.map(b=>audioContext.decodeAudioData(b)))
             // If we have to handle our own ticking 
             
-            $sequencerState = Array(sources.length).fill(Array(timeSteps).fill(false))
-
             loading = false
+            asyncEffectRunning = false
 
-            // Do interval if necessary
-            if (synchronizedTick !== undefined) {
-                return
-            }
-            interval = setInterval(() => {
-                tick = (tick + 1) % $sequencerState[0].length
-                for (let i = 0; i < $sequencerState.length; i++) {
-                    if ($sequencerState[i][tick]) {
-                        if (instrumentId == "synth" || instrumentId == "bass") {
-                            muteAllNotes(sources)
-                        }
-                        sources[i]?.stop()
-                        sources[i] = audioContext.createBufferSource()
-                        // @ts-ignore -- Won't be null
-                        sources[i]!.buffer = audioBuffers[i]
-                        sources[i]!.connect(audioContext.destination)
-                        sources[i]!.start()
-                        sources[i]!.onended = () => {
-                            sources[i] = null
-                        }
-                    }
-                }
-            }, 200);
+            // // Do interval if necessary
+            // if (synchronizedTick !== undefined) {
+            //     return
+            // }
+            // interval = setInterval(() => {
+            //     tick = (tick + 1) % sequencerState[0].length
+            //     for (let i = 0; i < sequencerState.length; i++) {
+            //         if (sequencerState[i][tick]) {
+            //             if (instrumentId == "synth" || instrumentId == "bass") {
+            //                 muteAllNotes(sources)
+            //             }
+            //             sources[i]?.stop()
+            //             sources[i] = audioContext.createBufferSource()
+            //             // @ts-ignore -- Won't be null
+            //             sources[i]!.buffer = audioBuffers[i]
+            //             sources[i]!.connect(audioContext.destination)
+            //             sources[i]!.start()
+            //             sources[i]!.onended = () => {
+            //                 sources[i] = null
+            //             }
+            //         }
+            //     }
+            // }, 200);
         }
-        go()
+        if (!audioBuffers && !asyncEffectRunning)
+            go()
+    
 
+        console.log(synchronizedTick, audioBuffers)
         // If the tick is coming from a prop
-        if (synchronizedTick !== undefined) {
-            for (let i = 0; i < $sequencerState.length; i++) {
-                    if ($sequencerState[i][synchronizedTick]) {
-                        if (instrumentId == "synth" || instrumentId == "bass") {
-                            muteAllNotes(sources)
-                        }
-                        sources[i]?.stop()
-                        sources[i] = audioContext.createBufferSource()
-                        // @ts-ignore -- Won't be null
-                        sources[i]!.buffer = audioBuffers[i]
-                        sources[i]!.connect(audioContext.destination)
-                        sources[i]!.start()
-                        sources[i]!.onended = () => {
-                            sources[i] = null
-                        }
+        if (synchronizedTick === undefined || !audioBuffers) {
+            return
+        }
+        for (let i = 0; i < untrack(() => sequencerState).length; i++) {
+                if (untrack(() => sequencerState)[i][synchronizedTick]) {
+                    if (instrumentId == "synth" || instrumentId == "bass") {
+                        muteAllNotes(sources)
+                    }
+                    sources[i]?.stop()
+                    sources[i] = audioContext.createBufferSource()
+                    // @ts-ignore -- Won't be null
+                    sources[i]!.buffer = audioBuffers[i]
+                    sources[i]!.connect(audioContext.destination)
+                    sources[i]!.start()
+                    sources[i]!.onended = () => {
+                        sources[i] = null
                     }
                 }
-        }
+            }
         return () => clearInterval(interval)
 
     })
-        
 </script>
 
 {#if loading}
     <p class="flex items-center justify-center">loading samples...</p>
 {:else}
     <div id="selection grid container" class="gap-4 flex flex-col">
-        {#each $sequencerState as row, rowIndex}
+        {#each sequencerState as row, rowIndex}
             <div class="flex flex-row justify-evenly">
                 {#each row as node, colIndex}
                     <!-- svelte-ignore a11y_consider_explicit_label -->
