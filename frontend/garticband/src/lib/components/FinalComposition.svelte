@@ -1,5 +1,5 @@
 <script lang="ts">
-    import SelectInstrument from "$lib/SelectInstrument.svelte";
+    import SelectInstrument from "$lib/components/SelectInstrument.svelte";
     import { onMount } from "svelte";
     import type { FinalCompositionProps } from '$lib/types'
 

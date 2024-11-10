@@ -36,14 +36,14 @@
     import { io } from "$lib/socketConnection"
 
     // Import components
-    import UpNext from "$lib/UpNext.svelte"
-    import AlreadyWent from "$lib/AlreadyWent.svelte"
+    import UpNext from "$lib/components/UpNext.svelte"
+    import AlreadyWent from "$lib/components/AlreadyWent.svelte"
     import WaitingForPlayers from "$lib/WaitingForPlayers.svelte"
-    import FinalComposition from "$lib/FinalComposition.svelte";
+    import FinalComposition from "$lib/components/FinalComposition.svelte";
 
     // Types
     import { type playerInRoom, type roomInfo } from "$lib/types";
-    import SelectInstrument from "$lib/SelectInstrument.svelte";
+    import SelectInstrument from "$lib/components/SelectInstrument.svelte";
 
     const URLParams = $page.url.searchParams
     let roomId = $state<string|null>(null)
