@@ -30,7 +30,7 @@ const httpServer = createServer(app)
 
 // * * * * * * * * * * Socket logic * * * * * * * * * *
 // Super temporary mapping of turn number to instruments
-const TURN_DURATION = 60 * 1000 // 1 min
+const TURN_DURATION = 30 * 1000 // 30 sec
 const NUM_PLAYERS_PER_ROOM = 4
 
 const instruments = [
@@ -93,31 +93,36 @@ io.on("connection", (socket) => {
             rooms.set(data.roomId, room)
             socket.emit("room_joined", { roomId: roomId, roomState: room })
         } else {
-            let playerInRoom = false
+            let playerAlreadyInRoomDataStructure = false
             room.players.forEach((v) => {
                 if (v.id == socket.id)
-                    playerInRoom = true
+                    playerAlreadyInRoomDataStructure = true
             })
             if (room.players.length >= NUM_PLAYERS_PER_ROOM) {
                 console.log("someone tried to join a room that's full")
                 return
             }
-            
-            // Assign player a turn number based on the order they joined the room
-            // TODO: Make turn number random
 
-            // Long ass expression to get the max turn number alr in the array
-            const turnNumber = Math.max(...Array(room.players.length).fill(0).map((v, i) => room.players[i].turnNumber)) + 1
-            const newPlayer: playerInRoom = {
-                turnNumber: turnNumber,
-                id: socket.id,
-                sequencer: {
-                    instrumentId: instruments[turnNumber - 1],
-                    // Hardcoded selection grid for now
-                    selectionGrid: Array(8).fill(Array(16).fill(false))
+            if (!playerAlreadyInRoomDataStructure) {
+                // Assign player a turn number based on the order they joined the room
+                // TODO: Make turn number random
+
+                // Long ass expression to get the max turn number alr in the array
+                const turnNumber = Math.max(...Array(room.players.length).fill(0).map((v, i) => room.players[i].turnNumber)) + 1
+                const newPlayer: playerInRoom = {
+                    turnNumber: turnNumber,
+                    id: socket.id,
+                    sequencer: {
+                        instrumentId: instruments[turnNumber - 1],
+                        // Hardcoded selection grid for now
+                        selectionGrid: Array(8).fill(Array(16).fill(false))
+                    }
                 }
+                room.players.push(newPlayer)
             }
-            room.players.push(newPlayer)
+            
+            
+            
             socket.join(data.roomId)
             socket.emit("room_joined", { roomId: data.roomId, roomState: room })
             socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room })
@@ -130,19 +135,21 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("game_started", {
             roomState: room
         })
-        console.log("started the game")
-        await delay(30 * 1000)
-        for (let i = 1; i <= NUM_PLAYERS_PER_ROOM; i++) {
+        await delay(TURN_DURATION)
+        for (let i = 1; i < NUM_PLAYERS_PER_ROOM; i++) {
             console.log("next turn")
 
             room.activeTurn++
             io.to(roomId).emit("new_turn", {
                 roomState: room
             })
-            await delay(30 * 1000)
+            await delay(TURN_DURATION)
         }
         room.activeTurn = null
         room.isCompleted = true
+        console.dir(room, {
+            depth: 6
+        })
         io.to(roomId).emit("game_finished", {
             roomState: room
         })
@@ -151,7 +158,7 @@ io.on("connection", (socket) => {
     // Broadcast updates to players' sequencers
     socket.on("update", ({ selectionGrid }) => {
         const room = rooms.get(roomId)
-        const player = room.players.find(p => p.id = socket.id)
+        const player = room.players.find(p => p.id == socket.id)
         player.sequencer.selectionGrid = selectionGrid
     })
 
