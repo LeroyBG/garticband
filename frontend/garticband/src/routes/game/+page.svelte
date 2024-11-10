@@ -9,10 +9,7 @@
     
     {#if gameActive}
         {#if activeTurn}
-            <Composer 
-                timeSteps={32}
-                instrumentId={roomState.players.find(p => p.id == io.id)?.sequencer.instrumentId} 
-            />
+            <SelectInstrument instrumentId={me!.sequencer!.instrumentId} timeSteps={NUM_TIMESTEPS} io={io} />
         {:else if upNext}
             <UpNext />
         {:else if alreadyWent}
@@ -22,7 +19,7 @@
         {/if}
     {:else}
         {#if gameFinished}
-            <FinalComposition roomState={roomState} />
+            <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
         {:else if roomReadyToStart}
             <button 
                 type="button"
@@ -34,22 +31,7 @@
     <p>not in a room</p>
 {/if}
 
-<script lang="ts">
-    import Composer from "$lib/Composer.svelte";
-    type playerInRoom = {
-        turnNumber: number | null // null if not yet decided,
-        id: string,
-        sequencer: {
-            selectionGrid: boolean[][] | null, // null if no instrument selected
-            instrumentId: string
-        },
-    }
-
-    type roomInfo = {
-        players: playerInRoom[],
-        activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
-        isCompleted: boolean
-    }
+<script lang="ts">    
     import { page } from "$app/stores";
     import { io } from "$lib/socketConnection"
 
@@ -59,6 +41,9 @@
     import WaitingForPlayers from "$lib/WaitingForPlayers.svelte"
     import FinalComposition from "$lib/FinalComposition.svelte";
 
+    // Types
+    import { type playerInRoom, type roomInfo } from "$lib/types";
+    import SelectInstrument from "$lib/SelectInstrument.svelte";
 
     const URLParams = $page.url.searchParams
     let roomId = $state<string|null>(null)
@@ -68,28 +53,31 @@
         isCompleted: false
     })
 
+    const NUM_TIMESTEPS = 32
+
     // Find ourself in the array
-    let myTurnNumber = $derived<number|null>(roomState.players.find(p => p.id == io.id)?.turnNumber ?? null)
+    let me = $derived<playerInRoom|null>(roomState.players.find(p => p.id == io.id) ?? null)
+
 
     let roomReadyToStart = $derived<boolean>(!roomState.activeTurn && roomState.players.length == 4)
     let gameActive = $derived<boolean>(roomState.activeTurn != null)
     let gameFinished = $derived<boolean>(roomState.isCompleted)
 
     let upNext = $derived<boolean|null>(
-        (roomState.activeTurn && myTurnNumber) ? 
-            (roomState.activeTurn == myTurnNumber - 1) :
+        (roomState.activeTurn && me?.turnNumber) ? 
+            (roomState.activeTurn == me.turnNumber - 1) :
             null
     )
 
     let activeTurn = $derived<boolean|null>(
-        (roomState.activeTurn && myTurnNumber) ? 
-            (roomState.activeTurn == myTurnNumber) :
+        (roomState.activeTurn && me?.turnNumber) ? 
+            (roomState.activeTurn == me.turnNumber) :
             null
     )
     
     let alreadyWent = $derived<boolean|null>(
-        (roomState.activeTurn && myTurnNumber) ? 
-            (roomState.activeTurn > myTurnNumber) :
+        (roomState.activeTurn && me?.turnNumber) ? 
+            (roomState.activeTurn > me.turnNumber) :
             null
     )
 
