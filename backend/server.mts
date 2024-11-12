@@ -18,7 +18,10 @@ const app = express()
 const { PORT, FRONTEND_URL } = process.env
 
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: FRONTEND_URL
+}))
+app.use(express.static('public'))
 app.use(morgan('dev'))
 
 app.use("/rooms", roomRouter)
@@ -27,7 +30,8 @@ const httpServer = createServer(app)
 
 // * * * * * * * * * * Socket logic * * * * * * * * * *
 // Super temporary mapping of turn number to instruments
-const TURN_DURATION = 60 * 1000 // 1 min
+const TURN_DURATION = 30 * 1000 // 30 sec
+const NUM_PLAYERS_PER_ROOM = 4
 
 const instruments = [
     "drums",
@@ -56,7 +60,7 @@ const rooms = new Map<roomId, roomInfo>()
 
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173"
+        origin: FRONTEND_URL
     }
 })
 
@@ -89,36 +93,73 @@ io.on("connection", (socket) => {
             rooms.set(data.roomId, room)
             socket.emit("room_joined", { roomId: roomId, roomState: room })
         } else {
-            const MAX_PLAYERS_PER_ROOM = 4
-            let playerInRoom = false
+            let playerAlreadyInRoomDataStructure = false
             room.players.forEach((v) => {
                 if (v.id == socket.id)
-                    playerInRoom = true
+                    playerAlreadyInRoomDataStructure = true
             })
-            if (room.players.length >= MAX_PLAYERS_PER_ROOM) {
+            if (room.players.length >= NUM_PLAYERS_PER_ROOM) {
                 console.log("someone tried to join a room that's full")
                 return
             }
-            
-            // Assign player a turn number based on the order they joined the room
-            // TODO: Make turn number random
 
-            // Long ass expression to get the max turn number alr in the array
-            const turnNumber = Math.max(...Array(room.players.length).fill(0).map((v, i) => room.players[i].turnNumber)) + 1
-            const newPlayer: playerInRoom = {
-                turnNumber: turnNumber,
-                id: socket.id,
-                sequencer: {
-                    instrumentId: instruments[turnNumber - 1],
-                    // Hardcoded selection grid for now
-                    selectionGrid: Array(8).fill(Array(16).fill(false))
+            if (!playerAlreadyInRoomDataStructure) {
+                // Assign player a turn number based on the order they joined the room
+                // TODO: Make turn number random
+
+                // Long ass expression to get the max turn number alr in the array
+                const turnNumber = Math.max(...Array(room.players.length).fill(0).map((v, i) => room.players[i].turnNumber)) + 1
+                const newPlayer: playerInRoom = {
+                    turnNumber: turnNumber,
+                    id: socket.id,
+                    sequencer: {
+                        instrumentId: instruments[turnNumber - 1],
+                        // Hardcoded selection grid for now
+                        selectionGrid: Array(8).fill(Array(16).fill(false))
+                    }
                 }
+                room.players.push(newPlayer)
             }
-            room.players.push(newPlayer)
+            
+            
+            
             socket.join(data.roomId)
             socket.emit("room_joined", { roomId: data.roomId, roomState: room })
             socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room })
         }
+    })
+
+    socket.on("start_game", async (data) => {
+        const room = rooms.get(roomId)
+        room.activeTurn = 1
+        io.to(roomId).emit("game_started", {
+            roomState: room
+        })
+        await delay(TURN_DURATION)
+        for (let i = 1; i < NUM_PLAYERS_PER_ROOM; i++) {
+            console.log("next turn")
+
+            room.activeTurn++
+            io.to(roomId).emit("new_turn", {
+                roomState: room
+            })
+            await delay(TURN_DURATION)
+        }
+        room.activeTurn = null
+        room.isCompleted = true
+        console.dir(room, {
+            depth: 6
+        })
+        io.to(roomId).emit("game_finished", {
+            roomState: room
+        })
+    })
+
+    // Broadcast updates to players' sequencers
+    socket.on("update", ({ selectionGrid }) => {
+        const room = rooms.get(roomId)
+        const player = room.players.find(p => p.id == socket.id)
+        player.sequencer.selectionGrid = selectionGrid
     })
 
     socket.on("disconnect", (reason) => {
