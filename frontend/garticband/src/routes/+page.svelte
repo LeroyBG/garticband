@@ -1,6 +1,6 @@
-<div class="h-full flex flex-col justify-center items-center">
+<div class="h-full flex flex-col justify-center items-center bg-purple">
     <div class="text-purple-800 flex flex-col items-center justify-center gap-3">
-    <h1 class=" text-purple-600">garticband</h1>
+        <img src={logo} alt="logo"/>
         <div><a href={createGamePageURL}>create game</a></div>
         <div>
             {#if !validGameId}
@@ -20,6 +20,7 @@
 </div>
 
 <script lang="ts">
+    import logo from "$lib/images/garticband.png"
     let gameIdInput = $state<string>("");
     const gamePageURL = "/game"
     let createGamePageURL = $state("")
