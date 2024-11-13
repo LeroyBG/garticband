@@ -66,10 +66,14 @@ const io = new Server(httpServer, {
 
 io.on("connection", (socket) => {
     console.log("client connected")
+
+    // establish the room ID holder
     let roomId: roomId|null = null
 
     socket.on("join_room", (data) => {
         console.log("someone is trying to join a room")
+        
+        // server now holds roomId for specific client
         roomId = data.roomId
         const room = rooms.get(roomId) ?? null
 
@@ -130,8 +134,11 @@ io.on("connection", (socket) => {
     })
 
     socket.on("start_game", async (data) => {
+        // retrieve the correct room 
         const room = rooms.get(roomId)
         room.activeTurn = 1
+
+        // send a message to the room with the new room state (started)
         io.to(roomId).emit("game_started", {
             roomState: room
         })

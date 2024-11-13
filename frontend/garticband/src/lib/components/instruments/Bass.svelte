@@ -1,7 +1,7 @@
 <script lang="ts">
     import { instrumentSamples } from "$lib/instrumentSamples";
     import { type InstrumentProps } from "$lib/types";
-    import Composer from "$lib/Composer.svelte";
+    import Composer from "$lib/components/Composer.svelte";
 
     const others: InstrumentProps = $props()
     const hasBlackKeys = true
