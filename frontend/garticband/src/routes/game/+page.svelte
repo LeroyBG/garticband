@@ -17,6 +17,7 @@
         {:else}
             <WaitingForPlayers />
         {/if}
+    <!-- ADD CASE FOR SELECT INSTRUMENT -->
     {:else}
         {#if gameFinished}
             <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
@@ -38,7 +39,7 @@
     // Import components
     import UpNext from "$lib/components/UpNext.svelte"
     import AlreadyWent from "$lib/components/AlreadyWent.svelte"
-    import WaitingForPlayers from "$lib/WaitingForPlayers.svelte"
+    import WaitingForPlayers from "$lib/components/WaitingForPlayers.svelte"
     import FinalComposition from "$lib/components/FinalComposition.svelte";
 
     // Types

@@ -42,3 +42,7 @@
 
     let validGameId = $derived(validateGameId(gameIdInput))
 </script>
+
+<style>
+    
+</style>
