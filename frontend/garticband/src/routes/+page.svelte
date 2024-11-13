@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col justify-center items-center bg-purple">
+<div class="h-full flex flex-col justify-center items-center bg-gradient-to-b from-purple to-pink">
     <div class="text-purple-800 flex flex-col items-center justify-center gap-3">
         <img src={logo} alt="logo"/>
         <div><a href={createGamePageURL}>create game</a></div>

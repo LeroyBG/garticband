@@ -7,6 +7,7 @@ export default {
     extend: {},
     colors: {
       'purple': '#310148',
+      'pink': '#b515b0',
       'beige': '#FBD095',
       'lightred': '#FF3D6A'
     }
