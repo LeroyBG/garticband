@@ -38,7 +38,7 @@
     // Import components
     import UpNext from "$lib/components/UpNext.svelte"
     import AlreadyWent from "$lib/components/AlreadyWent.svelte"
-    import WaitingForPlayers from "$lib/WaitingForPlayers.svelte"
+    import WaitingForPlayers from "$lib/components/WaitingForPlayers.svelte"
     import FinalComposition from "$lib/components/FinalComposition.svelte";
 
     // Types
