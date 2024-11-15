@@ -13,7 +13,9 @@ export default {
       'lightred': '#FF3D6A',
       'white': '#ffffff',
       'darkpurple': '#1b0131',
-      'indigo': '#4F46E5'
+      'indigo': '#4F46E5',
+      'darkred': '#FF1A00',
+      'darkgrey': '#141414'
     }
   },
 
