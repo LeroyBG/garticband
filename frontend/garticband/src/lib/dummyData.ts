@@ -1,18 +1,4 @@
-type playerInRoom = {
-    turnNumber: number | null // null if not yet decided,
-    id: string,
-    name: string,
-    sequencer: {
-        selectionGrid: boolean[][] | null, // null if no instrument selected
-        instrumentId: string
-    },
-}
-
-type roomInfo = {
-    players: playerInRoom[],
-    activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
-    isCompleted: boolean
-}
+import type { roomInfo } from "./types"
 
 export const allFalseRoomState: roomInfo = {
     activeTurn: null,
