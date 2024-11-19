@@ -7,12 +7,12 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { delay } from './util/util.mts'
 
-import { initializeApp, applicationDefault } from 'firebase-admin/app'
+// import { initializeApp, applicationDefault } from 'firebase-admin/app'
 
-initializeApp({
-    credential: applicationDefault(),
-    databaseURL: 'https://<DATABASE_NAME>.firebaseio.com'
-});
+// initializeApp({
+//     credential: applicationDefault(),
+//     databaseURL: 'https://<DATABASE_NAME>.firebaseio.com'
+// });
 
 const app = express()
 const { PORT, FRONTEND_URL } = process.env
@@ -44,6 +44,7 @@ type roomId = string // null if no instrument selected
 type playerInRoom = {
     turnNumber: number // null if not yet decided
     id: string,
+    name: string,
     sequencer: {
         selectionGrid: boolean[][] | null, // null if no instrument selected
         instrumentId: string
@@ -83,6 +84,7 @@ io.on("connection", (socket) => {
             const player: playerInRoom = {
                 turnNumber: 1,
                 id: socket.id,
+                name: data.name,
                 sequencer: {
                     instrumentId: instruments[0],
                     selectionGrid: Array(8).fill(Array(16).fill(false))
@@ -116,6 +118,7 @@ io.on("connection", (socket) => {
                 const newPlayer: playerInRoom = {
                     turnNumber: turnNumber,
                     id: socket.id,
+                    name: data.name,
                     sequencer: {
                         instrumentId: instruments[turnNumber - 1],
                         // Hardcoded selection grid for now

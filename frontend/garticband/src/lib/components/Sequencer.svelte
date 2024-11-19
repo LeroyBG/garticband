@@ -28,13 +28,17 @@
     
     const constructConditionalKeyStyling = (selected: boolean, active: boolean, black: boolean, colIndex: number): string => {
         if (active) {
-            return selected ? "bg-yellow-400 border-4 border-yellow-200" : "bg-yellow-100 border-2 border-yellow-300"
+            // this is for the moving ticker colors
+            return selected ? "bg-lightred border-4 border-lightred" : "bg-white border-2 border-white"
         } else {
-            let style = `border-2 border-${(colIndex % 4 == 0) ? "black" : "grey-500"} `
+            // this is for practically all buttons except for the active ones
+            // border-2 border-${(colIndex % 4 == 0) ? "darkred" : "purple"}
+            let style = `border-2 border-indigo `
             if (selected) {
-                style += (black) ? "bg-green-400" : "bg-green-200"
+                // style += (black) ? "bg-green-400" : "bg-green-200"
+                style += "bg-indigo"
             } else {
-                style += (black) ? "bg-gray-100" : ""
+                style += (black) ? "pink" : ""
             }
             return style
         }
@@ -44,7 +48,6 @@
     // Using indexing rows from the top (because of how they're created in the
     // #each statement) using 0-based indexing 
     const blackKeyIndices = new Set(hasBlackKeys ? [1, 3, 5, 8, 10] : [])
-    
     const sequencerStyle = $derived<string[][]>(sequencerState.map((row, i) => {
         return row.map((_, j) => {
             return constructConditionalKeyStyling(
@@ -92,7 +95,7 @@
 
 </script>
 
-<div id="selection grid container" class="gap-4 flex flex-col">
+<div id="selection grid container" class="gap-4 flex flex-col ml-[10%] mr-[10%] mt-[3%] bg-darkgrey px-2 py-6 rounded-md shadow-xl">
     {#each sequencerState as row, rowIndex}
         <div class="flex flex-row justify-evenly">
             {#each row as node, colIndex}
