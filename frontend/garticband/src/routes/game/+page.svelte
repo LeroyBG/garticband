@@ -20,6 +20,14 @@
         {:else}
             {#if gameFinished}
                 <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
+            {:else if instrumentSelectActive}
+                <button id="drums" class="rounded-full bg-beige py-2 px-4 font-bold" onclick={chooseDrum}>Drum</button>
+                <button id="piano" class="rounded-full bg-indigo py-2 px-4 font-bold" onclick={choosePiano}>Piano</button>
+                <button id="synth" class="rounded-full bg-blue py-2 px-4 font-bold" onclick={chooseSynth}>Synth</button>
+                <button id="bass" class="rounded-full bg-darkred py-2 px-4 font-bold" onclick={chooseBass}>Bass</button>
+                {#if instrumentDone}
+                    <button class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold" onclick={startGame}>Let's GO</button>
+                {/if}
             {:else}
                 <h2 class="font-mono text-lg font-bold text-white inline pl-2">ROOM ID: {roomId}</h2>
                 <button class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold" onclick={copyID}>Copy ID</button>
@@ -40,7 +48,7 @@
                 </div>
                 {#if roomReadyToStart}
                     <div class="flex justify-center py-2">
-                        <button class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold" type="button" onclick={startGame}>Start Game</button>
+                        <button class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold" type="button" onclick={startSelect}>Start Game</button>
                     </div>
                 {/if}
             {/if}
@@ -72,15 +80,22 @@
     let username = ""
     if(browser) {
         username = localStorage.getItem('username') || 'No Name'
-        console.log(username)
     }
 
     const URLParams = $page.url.searchParams
     let roomId = $state<string|null>(null)
     let roomState = $state<roomInfo>({
         players: [],
+        selectPhase: false,
         activeTurn: null,
         isCompleted: false
+    })
+
+    let takenInstruments = $state({
+        "drums": false,
+        "piano": false,
+        "synth": false,
+        "bass": false
     })
 
     const NUM_TIMESTEPS = 32
@@ -88,6 +103,8 @@
     // Find ourself in the array
     let me = $derived<playerInRoom|null>(roomState.players.find(p => p.id == io.id) ?? null)
 
+    let instrumentSelectActive = $derived<boolean>(roomState.selectPhase == true)
+    let instrumentDone = $derived<boolean>(Object.values(takenInstruments).every(value => value === true))
 
     let roomReadyToStart = $derived<boolean>(!roomState.activeTurn && roomState.players.length == 4)
     let gameActive = $derived<boolean>(roomState.activeTurn != null)
@@ -110,6 +127,38 @@
             (roomState.activeTurn > me.turnNumber) :
             null
     )
+
+    const startSelect = () => {
+        io.emit("start_select", {})
+    }
+
+    const chooseDrum = () => {
+        // add a check where it only does this if we don't have an instrument selected
+        if (me?.sequencer.instrumentId == null && takenInstruments["drums"] == false) {
+            io.emit("choose_drum", {}) 
+        } 
+    }
+    // add other instrument selections
+    const chooseSynth = () => {
+        // add a check where it only does this if we don't have an instrument selected
+        if (me?.sequencer.instrumentId == null && takenInstruments["synth"] == false) {
+            io.emit("choose_synth", {}) 
+        } 
+    }
+
+    const chooseBass = () => {
+        // add a check where it only does this if we don't have an instrument selected
+        if (me?.sequencer.instrumentId == null && takenInstruments["bass"] == false) {
+            io.emit("choose_bass", {}) 
+        } 
+    }
+
+    const choosePiano = () => {
+        // add a check where it only does this if we don't have an instrument selected
+        if (me?.sequencer.instrumentId == null && takenInstruments["piano"] == false) {
+            io.emit("choose_piano", {}) 
+        } 
+    }
 
     const startGame = () => {
         io.emit("start_game", {})
@@ -135,6 +184,17 @@
 
         io.on("player_left", (data) => {
             roomState = data.roomState
+        })
+
+        io.on("select_started", (data) => {
+            roomState = data.roomState
+        })
+
+        io.on("update_instrument", (data) => {
+            roomState = data.roomState
+            takenInstruments[data.instrument as keyof typeof takenInstruments] = true
+            var btn = document.querySelector("#" + data.instrument)
+            btn?.classList.add("bg-grey")
         })
 
         io.on("game_started", (data) => {

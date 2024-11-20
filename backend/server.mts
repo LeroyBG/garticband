@@ -53,6 +53,7 @@ type playerInRoom = {
 
 type roomInfo = {
     players: playerInRoom[],
+    selectPhase: boolean,
     activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
     isCompleted: boolean
 }
@@ -86,12 +87,13 @@ io.on("connection", (socket) => {
                 id: socket.id,
                 name: data.name,
                 sequencer: {
-                    instrumentId: instruments[0],
+                    instrumentId: null,   // REPLACE THIS NULL
                     selectionGrid: Array(8).fill(Array(16).fill(false))
                 }
             }
             const room: roomInfo = {
                 players: [player],
+                selectPhase: false,
                 activeTurn: null,
                 isCompleted: false
             }
@@ -120,7 +122,7 @@ io.on("connection", (socket) => {
                     id: socket.id,
                     name: data.name,
                     sequencer: {
-                        instrumentId: instruments[turnNumber - 1],
+                        instrumentId: null,  // REPLACE IT WITH NULL
                         // Hardcoded selection grid for now
                         selectionGrid: Array(8).fill(Array(16).fill(false))
                     }
@@ -134,6 +136,56 @@ io.on("connection", (socket) => {
             socket.emit("room_joined", { roomId: data.roomId, roomState: room })
             socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room })
         }
+    })
+
+    // add reciever for dealing with instrument selection
+    socket.on("start_select", async (data) => {
+        const room = rooms.get(roomId)
+        room.selectPhase = true
+
+        io.to(roomId).emit("select_started", {
+            roomState: room
+        })
+    })
+
+    socket.on("choose_drum", async (data) => {
+        const room = rooms.get(roomId)
+        let player = room.players.find(p => p.id == socket.id)
+        player.sequencer.instrumentId = "drums"
+
+        io.to(roomId).emit("update_instrument", {
+            roomState: room, instrument: "drums"
+        })
+    })
+
+    socket.on("choose_synth", async (data) => {
+        const room = rooms.get(roomId)
+        let player = room.players.find(p => p.id == socket.id)
+        player.sequencer.instrumentId = "synth"
+
+        io.to(roomId).emit("update_instrument", {
+            roomState: room, instrument: "synth"
+        })
+    })
+
+    socket.on("choose_bass", async (data) => {
+        const room = rooms.get(roomId)
+        let player = room.players.find(p => p.id == socket.id)
+        player.sequencer.instrumentId = "bass"
+
+        io.to(roomId).emit("update_instrument", {
+            roomState: room, instrument: "bass"
+        })
+    })
+
+    socket.on("choose_piano", async (data) => {
+        const room = rooms.get(roomId)
+        let player = room.players.find(p => p.id == socket.id)
+        player.sequencer.instrumentId = "piano"
+
+        io.to(roomId).emit("update_instrument", {
+            roomState: room, instrument: "piano"
+        })
     })
 
     socket.on("start_game", async (data) => {
