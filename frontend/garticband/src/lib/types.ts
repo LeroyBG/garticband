@@ -42,6 +42,7 @@ export interface FinalCompositionProps extends Pick<SelectInstrumentProps, "time
 export type playerInRoom = {
     turnNumber: number | null // null if not yet decided,
     id: string,
+    name: string,
     sequencer: {
         selectionGrid: boolean[][] | null, // null if no instrument selected
         instrumentId: instrumentId

@@ -1,9 +1,15 @@
 <script lang="ts">
   import logo from "$lib/images/garticband.png";
+
   let gameIdInput = $state<string>("");
   let playerName = $state<string>("");
   const gamePageURL = "/game";
   let createGamePageURL = $state("");
+
+  function passName() {
+    let username = playerName;
+    localStorage.setItem('username', username);
+  }
 
   $effect(() => {
     createGamePageURL =
@@ -31,7 +37,7 @@
 
 <div class="h-full flex bg-gradient-to-b from-purple to-pink">
   <div class="flex-1 flex justify-center items-center">
-    <img src={logo} alt="logo" class="w-1/2" />
+    <img src={logo} alt="logo" class="w-2/5" />
   </div>
   <div
     class="flex-1 flex flex-col items-center justify-center gap-4 text-center"
@@ -48,7 +54,7 @@
     />
 
     <div class="bg-beige p-2 rounded-md text-xl w-40">
-      <a href={createGamePageURL}>Create Game</a>
+      <a href={createGamePageURL} onclick={passName}>Create Game</a>
     </div>
     <div class="bg-lightred p-2 rounded-md text-xl w-40">
       {#if !validGameId}
@@ -57,6 +63,7 @@
         <a
           href={joinGamePageURL}
           class="bg-purple-600 text-white rounded-md p-1"
+          onclick={passName}
         >
           Join Game
         </a>
