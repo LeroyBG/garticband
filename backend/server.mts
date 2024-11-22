@@ -7,12 +7,12 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { delay } from './util/util.mts'
 
-import { initializeApp, applicationDefault } from 'firebase-admin/app'
+// import { initializeApp, applicationDefault } from 'firebase-admin/app'
 
-initializeApp({
-    credential: applicationDefault(),
-    databaseURL: 'https://<DATABASE_NAME>.firebaseio.com'
-});
+// initializeApp({
+//     credential: applicationDefault(),
+//     databaseURL: 'https://<DATABASE_NAME>.firebaseio.com'
+// });
 
 const app = express()
 const { PORT, FRONTEND_URL } = process.env
