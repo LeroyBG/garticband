@@ -21,6 +21,7 @@
             {#if gameFinished}
                 <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
             {:else if instrumentSelectActive}
+                <h2>{genre}</h2>
                 <button id="drums" class="rounded-full bg-beige py-2 px-4 font-bold" onclick={chooseDrum}>Drum</button>
                 <button id="piano" class="rounded-full bg-indigo py-2 px-4 font-bold" onclick={choosePiano}>Piano</button>
                 <button id="synth" class="rounded-full bg-blue py-2 px-4 font-bold" onclick={chooseSynth}>Synth</button>
@@ -97,6 +98,8 @@
         "synth": false,
         "bass": false
     })
+
+    let genre = $state<string|null>("")
 
     const NUM_TIMESTEPS = 32
 
@@ -188,6 +191,7 @@
 
         io.on("select_started", (data) => {
             roomState = data.roomState
+            genre = data.genre
         })
 
         io.on("update_instrument", (data) => {

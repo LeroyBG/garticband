@@ -18,7 +18,8 @@ export interface SequencerProps {
 }
 
 export interface SelectProps {
-    io: Socket | null
+    io: Socket | null,
+    instrumentId: instrumentId
 }
 
 export interface ComposerProps extends Omit<SequencerProps, "selectedSquareActive" | "rows"> {

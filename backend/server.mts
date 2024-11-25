@@ -33,6 +33,13 @@ const httpServer = createServer(app)
 const TURN_DURATION = 30 * 1000 // 30 sec
 const NUM_PLAYERS_PER_ROOM = 4
 
+const genres = [
+    "Jazz",
+    "EDM",
+    "Hard Rock",
+    "Country"
+]
+
 const instruments = [
     "drums",
     "piano",
@@ -142,9 +149,11 @@ io.on("connection", (socket) => {
     socket.on("start_select", async (data) => {
         const room = rooms.get(roomId)
         room.selectPhase = true
+        let i = Math.floor(Math.random() * 4)
 
         io.to(roomId).emit("select_started", {
-            roomState: room
+            roomState: room,
+            genre: genres[i]
         })
     })
 
