@@ -240,7 +240,7 @@
         </button>
 
         <!-- Layout: Players List and Buttons Side-by-Side -->
-        <div class="flex flex-row items-start justify-center space-x-8 h-full">
+        <div class="flex flex-row items-center justify-center space-x-8 h-full">
           <!-- Players List -->
           <div class="bg-white bg-opacity-10 rounded-lg p-4 w-96">
             <h3 class="text-white text-center font-bold text-lg mb-4">
@@ -283,13 +283,13 @@
           </div>
 
           <!-- Buttons Section -->
-          <div class="flex flex-col space-y-6">
+          <div class="flex flex-col space-y-6 items-center justify-center">
             <!-- Start Game Button -->
             <button
               class={`rounded-full py-2 px-4 font-bold ${
                 roomReadyToStart
-                  ? "bg-beige hover:bg-darkbeige text-black"
-                  : "bg-grey cursor-not-allowed text-white"
+                  ? "bg-beige text-black hover:bg-darkbeige"
+                  : "bg-grey text-white cursor-not-allowed"
               }`}
               type="button"
               onclick={roomReadyToStart ? startSelect : null}
