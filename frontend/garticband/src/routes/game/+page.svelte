@@ -233,13 +233,13 @@
 
         io.on("game_over", (data) => {
             roomState = data.roomState
+            Object.keys(takenInstruments).forEach(key => {
+                takenInstruments[key as keyof typeof takenInstruments] = false
+            })
         })
 
         io.on("reset", (data) => {
             roomState = data.roomState
-            Object.keys(takenInstruments).forEach(key => {
-                takenInstruments[key as keyof typeof takenInstruments] = false
-            })
         })
 
         return () => io?.disconnect()
