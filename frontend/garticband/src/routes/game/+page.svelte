@@ -19,7 +19,11 @@
         <!-- ADD CASE FOR SELECT INSTRUMENT -->
         {:else}
             {#if gameFinished}
-                <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
+                {#if gameOver}
+                    <GameOver {io} />
+                {:else}
+                    <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
+                {/if}
             {:else if instrumentSelectActive}
                 <h2>{genre}</h2>
                 <button id="drums" class="rounded-full bg-beige py-2 px-4 font-bold" onclick={chooseDrum}>Drum</button>
@@ -37,14 +41,17 @@
                 <div class="mt-[5%] ml-[35%] mr-[35%] min-h-96 justify-center rounded-lg bg-darkpurple bg-opacity-50 p-2 text-xl space-y-4">
                     <h3 class="text-white opacity=100 font-bold text-center">Players</h3>      
                         {#each roomState.players as player}
-                            <div class="rounded-lg p-2 bg-white">
+                            <div class="rounded-lg p-2 bg-white inline-block w-[460px]">
                                 <img class="size-12 inline" src={playerIcon} alt="player"/>
                                 <p class="inline">{player.name}</p>
-                                <br/>
                             </div>
+                            {#if player.ready}
+                                <h2 class="ml-[15px] inline">READY!</h2>
+                            {/if}
                         {/each}
                 </div>
                 <div class="flex justify-center py-4">
+                    <button class="bg-green py-2 px-4 mr-4 font-bold rounded-full" onclick={changeReady}>Ready</button>
                     <a class="bg-lightred hover:bg-darkred py-2 px-4 font-bold rounded-full" href="/">Leave</a>
                 </div>
                 {#if roomReadyToStart}
@@ -72,6 +79,7 @@
     import AlreadyWent from "$lib/components/AlreadyWent.svelte"
     import WaitingForPlayers from "$lib/components/WaitingForPlayers.svelte"
     import FinalComposition from "$lib/components/FinalComposition.svelte";
+    import GameOver from "$lib/components/GameOver.svelte";
 
     // Types
     import { type playerInRoom, type roomInfo } from "$lib/types";
@@ -89,7 +97,8 @@
         players: [],
         selectPhase: false,
         activeTurn: null,
-        isCompleted: false
+        isCompleted: false,
+        gameOver: false
     })
 
     let takenInstruments = $state({
@@ -109,9 +118,10 @@
     let instrumentSelectActive = $derived<boolean>(roomState.selectPhase == true)
     let instrumentDone = $derived<boolean>(Object.values(takenInstruments).every(value => value === true))
 
-    let roomReadyToStart = $derived<boolean>(!roomState.activeTurn && roomState.players.length == 4)
+    let roomReadyToStart = $derived<boolean>(!roomState.activeTurn && roomState.players.length == 4 && roomState.players.every(p => p.ready === true))
     let gameActive = $derived<boolean>(roomState.activeTurn != null)
     let gameFinished = $derived<boolean>(roomState.isCompleted)
+    let gameOver = $derived<boolean>(roomState.gameOver)
 
     let upNext = $derived<boolean|null>(
         (roomState.activeTurn && me?.turnNumber) ? 
@@ -130,6 +140,10 @@
             (roomState.activeTurn > me.turnNumber) :
             null
     )
+
+    const changeReady = () => {
+        io.emit("change_ready", {})
+    }
 
     const startSelect = () => {
         io.emit("start_select", {})
@@ -189,6 +203,10 @@
             roomState = data.roomState
         })
 
+        io.on("notify_ready", (data) => {
+            roomState = data.roomState
+        })
+
         io.on("select_started", (data) => {
             roomState = data.roomState
             genre = data.genre
@@ -212,6 +230,18 @@
         io.on("game_finished", (data) => {
             roomState = data.roomState
         })
+
+        io.on("game_over", (data) => {
+            roomState = data.roomState
+        })
+
+        io.on("reset", (data) => {
+            roomState = data.roomState
+            Object.keys(takenInstruments).forEach(key => {
+                takenInstruments[key as keyof typeof takenInstruments] = false
+            })
+        })
+
         return () => io?.disconnect()
     })
 
