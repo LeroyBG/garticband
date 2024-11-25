@@ -17,6 +17,11 @@ export interface SequencerProps {
     io: Socket | null 
 }
 
+export interface SelectProps {
+    io: Socket | null,
+    instrumentId: instrumentId
+}
+
 export interface ComposerProps extends Omit<SequencerProps, "selectedSquareActive" | "rows"> {
     sampleFileNames: string[],
     centralAudioContext?: AudioContext,
@@ -52,5 +57,6 @@ export type playerInRoom = {
 export type roomInfo = {
     players: playerInRoom[],
     activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
+    selectPhase: boolean,
     isCompleted: boolean
 }

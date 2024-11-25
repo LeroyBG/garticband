@@ -15,7 +15,12 @@ export default {
       'darkpurple': '#1b0131',
       'indigo': '#4F46E5',
       'darkred': '#FF1A00',
-      'darkgrey': '#141414'
+      'darkgrey': '#141414',
+      'grey': '#3f3f3f',
+      'yellow': '#00A86B',
+      'blue': '#0080FE',
+      'green': '#008000'
+
     }
   },
 
