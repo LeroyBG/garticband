@@ -150,10 +150,17 @@
     });
 
     io.on("update_instrument", (data) => {
+      console.log(takenInstruments["piano"]);
+
       roomState = data.roomState;
       takenInstruments[data.instrument as keyof typeof takenInstruments] = true;
       var btn = document.querySelector("#" + data.instrument);
-      btn?.classList.add("bg-grey");
+
+      btn?.classList.add("bg-darkbeige");
+
+      console.log(btn?.classList);
+
+      console.log(takenInstruments["piano"]);
     });
 
     io.on("game_started", (data) => {
@@ -181,7 +188,7 @@
     <img src={logo} alt="logo" />
   </div>
 
-  <div class="w-full m-5">
+  <div class="w-full m-5 px-10">
     {#if roomId}
       {#if gameActive}
         <h3>active turn {roomState.activeTurn}</h3>
@@ -203,42 +210,36 @@
       {:else if gameFinished}
         <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
       {:else if instrumentSelectActive}
-        <h2>{genre}</h2>
-        <button
-          id="drums"
-          class="rounded-full bg-beige py-2 px-4 font-bold"
-          onclick={chooseDrum}>Drum</button
-        >
-        <button
-          id="piano"
-          class="rounded-full bg-indigo py-2 px-4 font-bold"
-          onclick={choosePiano}>Piano</button
-        >
-        <button
-          id="synth"
-          class="rounded-full bg-blue py-2 px-4 font-bold"
-          onclick={chooseSynth}>Synth</button
-        >
-        <button
-          id="bass"
-          class="rounded-full bg-darkred py-2 px-4 font-bold"
-          onclick={chooseBass}>Bass</button
-        >
-        {#if instrumentDone}
+        <div>
+          <h2>{genre}</h2>
           <button
-            class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold"
-            onclick={startGame}>Let's GO</button
+            id="drums"
+            class="rounded-full bg-yellow py-2 px-4 font-bold"
+            onclick={chooseDrum}>Drum</button
           >
-        {/if}
+          <button
+            id="piano"
+            class="rounded-full bg-indigo py-2 px-4 font-bold"
+            onclick={choosePiano}>Piano</button
+          >
+          <button
+            id="synth"
+            class="rounded-full bg-blue py-2 px-4 font-bold"
+            onclick={chooseSynth}>Synth</button
+          >
+          <button
+            id="bass"
+            class="rounded-full bg-darkred py-2 px-4 font-bold"
+            onclick={chooseBass}>Bass</button
+          >
+          {#if instrumentDone}
+            <button
+              class="rounded-full bg-green hover:bg-yellow py-2 px-4 font-bold"
+              onclick={startGame}>Let's GO</button
+            >
+          {/if}
+        </div>
       {:else}
-        <!-- Copy ID Button -->
-        <button
-          class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold"
-          onclick={copyID}
-        >
-          Copy ID
-        </button>
-
         <!-- Layout: Players List and Buttons Side-by-Side -->
         <div class="flex flex-row items-center justify-center space-x-8 h-full">
           <!-- Players List -->
@@ -284,11 +285,18 @@
 
           <!-- Buttons Section -->
           <div class="flex flex-col space-y-6 items-center justify-center">
+            <!-- Copy ID Button -->
+            <button
+              class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold"
+              onclick={copyID}
+            >
+              Copy ID
+            </button>
             <!-- Start Game Button -->
             <button
               class={`rounded-full py-2 px-4 font-bold ${
                 roomReadyToStart
-                  ? "bg-beige text-black hover:bg-darkbeige"
+                  ? "bg-lightgreen text-white hover:bg-green"
                   : "bg-grey text-white cursor-not-allowed"
               }`}
               type="button"
