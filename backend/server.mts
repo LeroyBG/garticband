@@ -30,7 +30,7 @@ const httpServer = createServer(app)
 
 // * * * * * * * * * * Socket logic * * * * * * * * * *
 // Super temporary mapping of turn number to instruments
-const TURN_DURATION = 30 * 1000 // 30 sec
+const TURN_DURATION = 30 * 100 // 30 sec 30 * 1000
 const NUM_PLAYERS_PER_ROOM = 4
 
 const genres = [
@@ -46,6 +46,9 @@ const instruments = [
     "bass",
     "synth"
 ]
+
+let playersInLobby = new Map<roomId, Set<string>>()
+
 type roomId = string // null if no instrument selected
 
 type playerInRoom = {
@@ -110,7 +113,8 @@ io.on("connection", (socket) => {
             }
             socket.join(data.roomId)
             rooms.set(data.roomId, room)
-            socket.emit("room_joined", { roomId: roomId, roomState: room })
+            playersInLobby.set(data.roomId, new Set<string>([socket.id]))
+            socket.emit("room_joined", { roomId: roomId, roomState: room, fullLobby: false})
         } else {
             let playerAlreadyInRoomDataStructure = false
             room.players.forEach((v) => {
@@ -145,8 +149,10 @@ io.on("connection", (socket) => {
             
             
             socket.join(data.roomId)
-            socket.emit("room_joined", { roomId: data.roomId, roomState: room })
-            socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room })
+            const lobby = playersInLobby.get(roomId)
+            lobby.add(socket.id)
+            socket.emit("room_joined", { roomId: data.roomId, roomState: room, fullLobby: lobby.size==4 ? true : false })
+            socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room, fullLobby: lobby.size==4 ? true : false })
         }
     })
 
@@ -167,9 +173,14 @@ io.on("connection", (socket) => {
         room.selectPhase = true
         let i = Math.floor(Math.random() * 4)
 
+        const lobby = playersInLobby.get(roomId)
+        lobby.clear()
+        console.log(lobby)
+
         io.to(roomId).emit("select_started", {
             roomState: room,
-            genre: genres[i]
+            genre: genres[i],
+            fullLobby: false
         })
     })
 
@@ -257,13 +268,19 @@ io.on("connection", (socket) => {
 
     socket.on("back_lobby", async (data) => {
         const room = rooms.get(roomId)
+        const lobby = playersInLobby.get(roomId)
+    
+        if (!lobby.has(socket.id))
+            lobby.add(socket.id)
 
         room.gameOver = false
         room.isCompleted = false
-
         io.to(socket.id).emit("reset", {
             roomState: room
         })
+
+        if (lobby.size == 4)
+            io.to(roomId).emit("update_lobby", {fullLobby: true})
     })
 
     // Broadcast updates to players' sequencers
@@ -275,10 +292,17 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", (reason) => {
         const room = rooms.get(roomId)
+        const lobby = playersInLobby.get(roomId)
         if (room) {
             // If we're the last player to leave the room
             if (room.players.length == 1) {
                 rooms.delete(roomId)
+                if (lobby)
+                    playersInLobby.delete(roomId)
+            }
+
+            if (lobby && lobby.has(socket.id)) {
+                lobby.delete(socket.id)
             }
             
             // Remove this player's entry from the room
@@ -290,8 +314,10 @@ io.on("connection", (socket) => {
                 }
             })
         }
-
-        socket.broadcast.to(roomId).emit("player_left", { roomState: room })
+        if (lobby)
+            socket.broadcast.to(roomId).emit("player_left", { roomState: room, fullLobby: lobby.size==4 ? true : false })
+        else
+            socket.broadcast.to(roomId).emit("player_left", { roomState: room, fullLobby: false })
     })
 })
 // * * * * * * * * * * Socket logic * * * * * * * * * * 

@@ -51,7 +51,9 @@
                         {/each}
                 </div>
                 <div class="flex justify-center py-4">
+                    {#if fullLobby}
                     <button class="bg-green py-2 px-4 mr-4 font-bold rounded-full" onclick={changeReady}>Ready</button>
+                    {/if}
                     <a class="bg-lightred hover:bg-darkred py-2 px-4 font-bold rounded-full" href="/">Leave</a>
                 </div>
                 {#if roomReadyToStart}
@@ -109,6 +111,7 @@
     })
 
     let genre = $state<string|null>("")
+    let fullLobby = $state<boolean|null>(false)
 
     const NUM_TIMESTEPS = 32
 
@@ -117,7 +120,7 @@
 
     let instrumentSelectActive = $derived<boolean>(roomState.selectPhase == true)
     let instrumentDone = $derived<boolean>(Object.values(takenInstruments).every(value => value === true))
-
+    
     let roomReadyToStart = $derived<boolean>(!roomState.activeTurn && roomState.players.length == 4 && roomState.players.every(p => p.ready === true))
     let gameActive = $derived<boolean>(roomState.activeTurn != null)
     let gameFinished = $derived<boolean>(roomState.isCompleted)
@@ -193,14 +196,18 @@
         io.on("room_joined", (data) => {
             roomId = data.roomId
             roomState = data.roomState
+            fullLobby = data.fullLobby
+            console.log("hello?")
         })
 
         io.on("player_joined", (data) => {
             roomState = data.roomState
+            fullLobby = data.fullLobby
         })
 
         io.on("player_left", (data) => {
             roomState = data.roomState
+            fullLobby = data.fullLobby
         })
 
         io.on("notify_ready", (data) => {
@@ -210,6 +217,7 @@
         io.on("select_started", (data) => {
             roomState = data.roomState
             genre = data.genre
+            fullLobby = data.fullLobby
         })
 
         io.on("update_instrument", (data) => {
@@ -236,6 +244,10 @@
             Object.keys(takenInstruments).forEach(key => {
                 takenInstruments[key as keyof typeof takenInstruments] = false
             })
+        })
+
+        io.on("update_lobby", (data) => {
+            fullLobby = data.fullLobby
         })
 
         io.on("reset", (data) => {
