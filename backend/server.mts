@@ -30,7 +30,7 @@ const httpServer = createServer(app)
 
 // * * * * * * * * * * Socket logic * * * * * * * * * *
 // Super temporary mapping of turn number to instruments
-const TURN_DURATION = 30 * 100 // 30 sec 30 * 1000
+const TURN_DURATION = 30 * 1000 // 30 sec
 const NUM_PLAYERS_PER_ROOM = 4
 
 const genres = [
