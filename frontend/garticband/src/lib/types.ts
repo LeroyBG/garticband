@@ -39,7 +39,9 @@ export type InstrumentProps = Omit<ComposerProps, "sampleFileNames" | "mutuallyE
 type instrumentId = "drums" | "bass" | "synth" | "piano"
 
 export interface SelectInstrumentProps extends InstrumentProps {
-    instrumentId: instrumentId
+    instrumentId: instrumentId,
+    roomState: roomInfo,
+    curPlayer: number | null | undefined
 }
 
 export interface FinalCompositionProps extends Pick<SelectInstrumentProps, "timeSteps" | "centralAudioContext" | "io">  {

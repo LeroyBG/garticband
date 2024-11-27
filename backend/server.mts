@@ -237,6 +237,8 @@ io.on("connection", (socket) => {
         await delay(TURN_DURATION)
         for (let i = 1; i < NUM_PLAYERS_PER_ROOM; i++) {
             console.log("next turn")
+            
+            // NEED SOME SORT OF PREVIEW THING
 
             room.activeTurn++
             io.to(roomId).emit("new_turn", {

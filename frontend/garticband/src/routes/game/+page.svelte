@@ -11,6 +11,8 @@
                 {#if activeTurn}
                     <SelectInstrument 
                         instrumentId={me!.sequencer!.instrumentId} 
+                        roomState={roomState}
+                        curPlayer={me!.turnNumber}
                         timeSteps={NUM_TIMESTEPS} 
                         io={io} 
                     />

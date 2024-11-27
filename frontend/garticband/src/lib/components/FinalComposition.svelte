@@ -26,6 +26,8 @@
         
         <SelectInstrument
             instrumentId={player.sequencer.instrumentId}
+            roomState={roomState}
+            curPlayer={1}
             disabled={true}
             initialState={player.sequencer.selectionGrid ?? undefined}
             synchronizedTick={tick}
