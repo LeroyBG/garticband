@@ -46,12 +46,16 @@ const instruments = [
     "bass",
     "synth"
 ]
+
+let playersInLobby = new Map<roomId, Set<string>>()
+
 type roomId = string // null if no instrument selected
 
 type playerInRoom = {
     turnNumber: number // null if not yet decided
     id: string,
     name: string,
+    ready: boolean,
     sequencer: {
         selectionGrid: boolean[][] | null, // null if no instrument selected
         instrumentId: string
@@ -62,7 +66,8 @@ type roomInfo = {
     players: playerInRoom[],
     selectPhase: boolean,
     activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
-    isCompleted: boolean
+    isCompleted: boolean,
+    gameOver: boolean
 }
 
 const rooms = new Map<roomId, roomInfo>()
@@ -93,6 +98,7 @@ io.on("connection", (socket) => {
                 turnNumber: 1,
                 id: socket.id,
                 name: data.name,
+                ready: false,
                 sequencer: {
                     instrumentId: null,   // REPLACE THIS NULL
                     selectionGrid: Array(8).fill(Array(16).fill(false))
@@ -102,11 +108,13 @@ io.on("connection", (socket) => {
                 players: [player],
                 selectPhase: false,
                 activeTurn: null,
-                isCompleted: false
+                isCompleted: false,
+                gameOver: false
             }
             socket.join(data.roomId)
             rooms.set(data.roomId, room)
-            socket.emit("room_joined", { roomId: roomId, roomState: room })
+            playersInLobby.set(data.roomId, new Set<string>([socket.id]))
+            socket.emit("room_joined", { roomId: roomId, roomState: room, fullLobby: false})
         } else {
             let playerAlreadyInRoomDataStructure = false
             room.players.forEach((v) => {
@@ -128,6 +136,7 @@ io.on("connection", (socket) => {
                     turnNumber: turnNumber,
                     id: socket.id,
                     name: data.name,
+                    ready: false,
                     sequencer: {
                         instrumentId: null,  // REPLACE IT WITH NULL
                         // Hardcoded selection grid for now
@@ -140,9 +149,22 @@ io.on("connection", (socket) => {
             
             
             socket.join(data.roomId)
-            socket.emit("room_joined", { roomId: data.roomId, roomState: room })
-            socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room })
+            const lobby = playersInLobby.get(roomId)
+            lobby.add(socket.id)
+            socket.emit("room_joined", { roomId: data.roomId, roomState: room, fullLobby: lobby.size==4 ? true : false })
+            socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room, fullLobby: lobby.size==4 ? true : false })
         }
+    })
+
+    socket.on("change_ready", async (data) => {
+        const room = rooms.get(roomId)
+        let player = room.players.find(p => p.id == socket.id)
+        player.ready = !player.ready
+        console.log(room)
+
+        io.to(roomId).emit("notify_ready", {
+            roomState: room
+        })
     })
 
     // add reciever for dealing with instrument selection
@@ -151,9 +173,14 @@ io.on("connection", (socket) => {
         room.selectPhase = true
         let i = Math.floor(Math.random() * 4)
 
+        const lobby = playersInLobby.get(roomId)
+        lobby.clear()
+        console.log(lobby)
+
         io.to(roomId).emit("select_started", {
             roomState: room,
-            genre: genres[i]
+            genre: genres[i],
+            fullLobby: false
         })
     })
 
@@ -201,6 +228,7 @@ io.on("connection", (socket) => {
         // retrieve the correct room 
         const room = rooms.get(roomId)
         room.activeTurn = 1
+        room.selectPhase = false
 
         // send a message to the room with the new room state (started)
         io.to(roomId).emit("game_started", {
@@ -224,6 +252,35 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("game_finished", {
             roomState: room
         })
+        await delay(TURN_DURATION)
+        room.gameOver = true
+        room.players.forEach(user => {
+            user.sequencer = {
+                instrumentId: null,   
+                selectionGrid: Array(8).fill(Array(16).fill(false))
+            }
+            user.ready = false
+        })
+        io.to(roomId).emit("game_over", {
+            roomState: room
+        })
+    })
+
+    socket.on("back_lobby", async (data) => {
+        const room = rooms.get(roomId)
+        const lobby = playersInLobby.get(roomId)
+    
+        if (!lobby.has(socket.id))
+            lobby.add(socket.id)
+
+        room.gameOver = false
+        room.isCompleted = false
+        io.to(socket.id).emit("reset", {
+            roomState: room
+        })
+
+        if (lobby.size == 4)
+            io.to(roomId).emit("update_lobby", {fullLobby: true})
     })
 
     // Broadcast updates to players' sequencers
@@ -235,10 +292,17 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", (reason) => {
         const room = rooms.get(roomId)
+        const lobby = playersInLobby.get(roomId)
         if (room) {
             // If we're the last player to leave the room
             if (room.players.length == 1) {
                 rooms.delete(roomId)
+                if (lobby)
+                    playersInLobby.delete(roomId)
+            }
+
+            if (lobby && lobby.has(socket.id)) {
+                lobby.delete(socket.id)
             }
             
             // Remove this player's entry from the room
@@ -250,8 +314,10 @@ io.on("connection", (socket) => {
                 }
             })
         }
-
-        socket.broadcast.to(roomId).emit("player_left", { roomState: room })
+        if (lobby)
+            socket.broadcast.to(roomId).emit("player_left", { roomState: room, fullLobby: lobby.size==4 ? true : false })
+        else
+            socket.broadcast.to(roomId).emit("player_left", { roomState: room, fullLobby: false })
     })
 })
 // * * * * * * * * * * Socket logic * * * * * * * * * * 

@@ -22,6 +22,10 @@ export interface SelectProps {
     instrumentId: instrumentId
 }
 
+export interface GameOverProps {
+    io: Socket | null
+}
+
 export interface ComposerProps extends Omit<SequencerProps, "selectedSquareActive" | "rows"> {
     sampleFileNames: string[],
     centralAudioContext?: AudioContext,
@@ -48,6 +52,7 @@ export type playerInRoom = {
     turnNumber: number | null // null if not yet decided,
     id: string,
     name: string,
+    ready: boolean,
     sequencer: {
         selectionGrid: boolean[][] | null, // null if no instrument selected
         instrumentId: instrumentId
@@ -58,5 +63,6 @@ export type roomInfo = {
     players: playerInRoom[],
     activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
     selectPhase: boolean,
-    isCompleted: boolean
+    isCompleted: boolean,
+    gameOver: boolean
 }
