@@ -1,7 +1,7 @@
 <div class="h-full bg-gradient-to-b from-purple to-pink">
-    <div class="size-24 relative top-3 left-5">
-        <img src={logo} alt="logo"/> 
-    </div>
+  <div class="size-24 relative top-3 left-5">
+    <img src={logo} alt="logo" />
+  </div>
 
     <div class="w-full m-5 px-10">
         {#if roomId}
@@ -138,32 +138,32 @@
     </div>
 </div>
 
-<script lang="ts">    
+<script lang="ts">
     import { page } from "$app/stores";
-    import { io } from "$lib/socketConnection"
-    import logo from "$lib/images/garticband.png"
-    import playerIcon from "$lib/images/artist.png"
+    import { io } from "$lib/socketConnection";
+    import logo from "$lib/images/garticband.png";
+    import playerIcon from "$lib/images/artist.png";
     import { browser } from "$app/environment";
-
+  
     // Import components
-    import UpNext from "$lib/components/UpNext.svelte"
-    import AlreadyWent from "$lib/components/AlreadyWent.svelte"
-    import WaitingForPlayers from "$lib/components/WaitingForPlayers.svelte"
+    import UpNext from "$lib/components/UpNext.svelte";
+    import AlreadyWent from "$lib/components/AlreadyWent.svelte";
+    import WaitingForPlayers from "$lib/components/WaitingForPlayers.svelte";
     import FinalComposition from "$lib/components/FinalComposition.svelte";
     import GameOver from "$lib/components/GameOver.svelte";
 
     // Types
     import { type playerInRoom, type roomInfo } from "$lib/types";
     import SelectInstrument from "$lib/components/SelectInstrument.svelte";
-    
+  
     // Name of user
-    let username = ""
-    if(browser) {
-        username = localStorage.getItem('username') || 'No Name'
+    let username = "";
+    if (browser) {
+      username = localStorage.getItem("username") || "No Name";
     }
-
-    const URLParams = $page.url.searchParams
-    let roomId = $state<string|null>(null)
+  
+    const URLParams = $page.url.searchParams;
+    let roomId = $state<string | null>(null);
     let roomState = $state<roomInfo>({
         players: [],
         selectPhase: false,
@@ -218,40 +218,52 @@
     }
 
     const startSelect = () => {
-        io.emit("start_select", {})
-    }
-
+      io.emit("start_select", {});
+    };
+  
     const chooseDrum = () => {
-        // add a check where it only does this if we don't have an instrument selected
-        if (me?.sequencer.instrumentId == null && takenInstruments["drums"] == false) {
-            io.emit("choose_drum", {}) 
-        } 
-    }
+      // add a check where it only does this if we don't have an instrument selected
+      if (
+        me?.sequencer.instrumentId == null &&
+        takenInstruments["drums"] == false
+      ) {
+        io.emit("choose_drum", {});
+      }
+    };
     // add other instrument selections
     const chooseSynth = () => {
-        // add a check where it only does this if we don't have an instrument selected
-        if (me?.sequencer.instrumentId == null && takenInstruments["synth"] == false) {
-            io.emit("choose_synth", {}) 
-        } 
-    }
-
+      // add a check where it only does this if we don't have an instrument selected
+      if (
+        me?.sequencer.instrumentId == null &&
+        takenInstruments["synth"] == false
+      ) {
+        io.emit("choose_synth", {});
+      }
+    };
+  
     const chooseBass = () => {
-        // add a check where it only does this if we don't have an instrument selected
-        if (me?.sequencer.instrumentId == null && takenInstruments["bass"] == false) {
-            io.emit("choose_bass", {}) 
-        } 
-    }
-
+      // add a check where it only does this if we don't have an instrument selected
+      if (
+        me?.sequencer.instrumentId == null &&
+        takenInstruments["bass"] == false
+      ) {
+        io.emit("choose_bass", {});
+      }
+    };
+  
     const choosePiano = () => {
-        // add a check where it only does this if we don't have an instrument selected
-        if (me?.sequencer.instrumentId == null && takenInstruments["piano"] == false) {
-            io.emit("choose_piano", {}) 
-        } 
-    }
-
+      // add a check where it only does this if we don't have an instrument selected
+      if (
+        me?.sequencer.instrumentId == null &&
+        takenInstruments["piano"] == false
+      ) {
+        io.emit("choose_piano", {});
+      }
+    };
+  
     const startGame = () => {
-        io.emit("start_game", {})
-    }
+      io.emit("start_game", {});
+    };
     $effect(() => {
         if (!URLParams.get("id")) {
             // Something went wrong...
@@ -327,7 +339,7 @@
     })
 
     function copyID() {
-        var copyText = roomId !== null ? roomId : "None";
-        navigator.clipboard.writeText(copyText);
+      var copyText = roomId !== null ? roomId : "None";
+      navigator.clipboard.writeText(copyText);
     }
-</script>
+  </script>
