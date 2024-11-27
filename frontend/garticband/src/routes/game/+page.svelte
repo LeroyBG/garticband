@@ -3,70 +3,139 @@
         <img src={logo} alt="logo"/> 
     </div>
 
-    {#if roomId}
-        {#if gameActive}
-            <h3>active turn {roomState.activeTurn}</h3>
-            <h3>completed: {roomState.isCompleted}</h3>
-            {#if activeTurn}
-                <SelectInstrument instrumentId={me!.sequencer!.instrumentId} timeSteps={NUM_TIMESTEPS} io={io} />
-            {:else if upNext}
-                <UpNext />
-            {:else if alreadyWent}
-                <AlreadyWent />
-            {:else}
-                <WaitingForPlayers />
-            {/if}
-        <!-- ADD CASE FOR SELECT INSTRUMENT -->
-        {:else}
-            {#if gameFinished}
+    <div class="w-full m-5 px-10">
+        {#if roomId}
+            {#if gameActive}
+                <h3>active turn {roomState.activeTurn}</h3>
+                <h3>completed: {roomState.isCompleted}</h3>
+                {#if activeTurn}
+                    <SelectInstrument 
+                        instrumentId={me!.sequencer!.instrumentId} 
+                        timeSteps={NUM_TIMESTEPS} 
+                        io={io} 
+                    />
+                {:else if upNext}
+                    <UpNext />
+                {:else if alreadyWent}
+                    <AlreadyWent />
+                {:else}
+                    <WaitingForPlayers />
+                {/if}
+            <!-- ADD CASE FOR SELECT INSTRUMENT -->
+            {:else if gameFinished}
                 {#if gameOver}
                     <GameOver {io} />
                 {:else}
                     <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
                 {/if}
             {:else if instrumentSelectActive}
-                <h2>{genre}</h2>
-                <button id="drums" class="rounded-full bg-beige py-2 px-4 font-bold" onclick={chooseDrum}>Drum</button>
-                <button id="piano" class="rounded-full bg-indigo py-2 px-4 font-bold" onclick={choosePiano}>Piano</button>
-                <button id="synth" class="rounded-full bg-blue py-2 px-4 font-bold" onclick={chooseSynth}>Synth</button>
-                <button id="bass" class="rounded-full bg-darkred py-2 px-4 font-bold" onclick={chooseBass}>Bass</button>
-                {#if instrumentDone}
-                    <button class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold" onclick={startGame}>Let's GO</button>
-                {/if}
-            {:else}
-                <h2 class="font-mono text-lg font-bold text-white inline pl-2">ROOM ID: {roomId}</h2>
-                <button class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold" onclick={copyID}>Copy ID</button>
-                <h3>active turn {roomState.activeTurn}</h3>
-                <h3>completed: {roomState.isCompleted}</h3>
-                <div class="mt-[5%] ml-[35%] mr-[35%] min-h-96 justify-center rounded-lg bg-darkpurple bg-opacity-50 p-2 text-xl space-y-4">
-                    <h3 class="text-white opacity=100 font-bold text-center">Players</h3>      
-                        {#each roomState.players as player}
-                            <div class="rounded-lg p-2 bg-white inline-block w-[460px]">
-                                <img class="size-12 inline" src={playerIcon} alt="player"/>
-                                <p class="inline">{player.name}</p>
-                            </div>
-                            {#if player.ready}
-                                <h2 class="ml-[15px] inline">READY!</h2>
-                            {/if}
-                        {/each}
-                </div>
-                <div class="flex justify-center py-4">
-                    {#if fullLobby}
-                    <button class="bg-green py-2 px-4 mr-4 font-bold rounded-full" onclick={changeReady}>Ready</button>
+                <div>
+                    <h2>{genre}</h2>
+                    <button 
+                        id="drums" 
+                        class="rounded-full bg-yellow py-2 px-4 font-bold" 
+                        onclick={chooseDrum}>Drum</button
+                    >
+                    <button 
+                        id="piano" 
+                        class="rounded-full bg-indigo py-2 px-4 font-bold" 
+                        onclick={choosePiano}>Piano</button
+                    >
+                    <button 
+                        id="synth" 
+                        class="rounded-full bg-blue py-2 px-4 font-bold" 
+                        onclick={chooseSynth}>Synth</button
+                    >
+                    <button 
+                        id="bass" 
+                        class="rounded-full bg-darkred py-2 px-4 font-bold" 
+                        onclick={chooseBass}>Bass</button
+                    >
+                    {#if instrumentDone}
+                        <button 
+                            class="rounded-full bg-green hover:bg-yellow py-2 px-4 font-bold" 
+                            onclick={startGame}>Let's GO</button
+                        >
                     {/if}
-                    <a class="bg-lightred hover:bg-darkred py-2 px-4 font-bold rounded-full" href="/">Leave</a>
                 </div>
-                {#if roomReadyToStart}
-                    <div class="flex justify-center py-2">
-                        <button class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold" type="button" onclick={startSelect}>Start Game</button>
+            {:else}
+                <div class="flex flex-row items-center justify-center space-x-8 h-full">
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4 w-96">
+                        <h3 class="text-white text-center font-bold text-lg mb-4">
+                            Players
+                        </h3>
+                        {#each roomState.players as player}
+                            <div
+                                class="flex items-center justify-between bg-white bg-opacity-100 p-4 rounded-lg mb-2 shadow-sm"
+                            >
+                                <!-- Player Avatar and Name -->
+                                <div class="flex items-center space-x-4">
+                                    <!-- <div
+                                        class="w-10 h-10 bg-purple-200 text-purple-700 flex items-center justify-center rounded-full"
+                                    >
+                                        <span class="font-bold">A</span>
+                                    </div> -->
+                                    <img class="size-12 inline" src={playerIcon} alt="player"/>
+                                    <p class="text-black font-medium">{player.name}</p>
+                                    {#if player.ready}
+                                        <h2 class="ml-[15px] inline">READY!</h2>
+                                    {/if}
+                                </div>
+                            </div>
+                        {/each}
                     </div>
-                {/if}
+                    <!-- Buttons Section -->
+                    <div class="flex flex-col space-y-6 items-center justify-center">
+                        <!-- Copy ID Button -->
+                        <button
+                            class="rounded-full bg-beige hover:bg-darkbeige py-2 px-4 font-bold"
+                            onclick={copyID}
+                        >
+                            Copy ID
+                        </button>
+                        <!-- Ready Button -->
+                        <button
+                            class={`rounded-full py-2 px-4 font-bold ${
+                                fullLobby
+                                ? "bg-lightgreen text-white hover:bg-green"
+                                : "bg-grey text-white cursor-not-allowed"
+                            }`}
+                            type="button"
+                            onclick={fullLobby ? changeReady : null}
+                            disabled={!fullLobby}
+                        >
+                            Ready
+                        </button>
+
+                        <!-- Start Game Button -->
+                        <button
+                            class={`rounded-full py-2 px-4 font-bold ${
+                                roomReadyToStart
+                                ? "bg-lightgreen text-white hover:bg-green"
+                                : "bg-grey text-white cursor-not-allowed"
+                            }`}
+                            type="button"
+                            onclick={roomReadyToStart ? startSelect : null}
+                            disabled={!roomReadyToStart}
+                        >
+                            Start Game
+                        </button>
+
+                        <!-- Leave Button -->
+                        <a
+                            class="bg-lightred hover:bg-darkred py-2 px-4 font-bold rounded-full"
+                            href="/"
+                        >
+                        Leave
+                        </a>
+                    </div>
+                </div>
             {/if}
+            <!-- <Composer instrumentId={"drums"} /> -->
+        {:else}
+            <p>not in a room</p>
         {/if}
-        <!-- <Composer instrumentId={"drums"} /> -->
-    {:else}
-        <p>not in a room</p>
-    {/if}
+    </div>
 </div>
 
 <script lang="ts">    
