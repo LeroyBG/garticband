@@ -2,7 +2,7 @@
   <div class="size-24 relative top-3 left-5">
     <img src={logo} alt="logo" />
   </div>
-
+  
     <div class="w-full m-5 px-10">
         {#if roomId}
             {#if gameActive}
@@ -11,6 +11,8 @@
                 {#if activeTurn}
                     <SelectInstrument 
                         instrumentId={me!.sequencer!.instrumentId} 
+                        roomState={roomState}
+                        curPlayer={me!.turnNumber}
                         timeSteps={NUM_TIMESTEPS} 
                         io={io} 
                     />
