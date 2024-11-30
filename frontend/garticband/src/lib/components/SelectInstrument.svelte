@@ -30,7 +30,7 @@
 
 </script>
 <!-- ----- SELECT A SEQUENCER TO USE BASED ON SERVER DATA ---- -->
-
+<!--This has a bug if someone leaves midway in the game-->
 {#if isPreview > 1}
     {@const player = roomState.players[curPlayer!-2]}
     <h1>PREVIEW</h1>

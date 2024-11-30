@@ -244,7 +244,7 @@ io.on("connection", (socket) => {
             io.to(roomId).emit("new_turn", {
                 roomState: room
             })
-            await delay(TURN_DURATION)
+            await delay(TURN_DURATION + 5000)
         }
         room.activeTurn = null
         room.isCompleted = true
@@ -254,7 +254,7 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("game_finished", {
             roomState: room
         })
-        await delay(TURN_DURATION)
+        await delay(TURN_DURATION + 5000)
         room.gameOver = true
         room.players.forEach(user => {
             user.sequencer = {
