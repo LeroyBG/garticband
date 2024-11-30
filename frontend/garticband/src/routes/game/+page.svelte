@@ -1,4 +1,4 @@
-<div class="h-full bg-gradient-to-b from-purple to-pink">
+<div class="w-screen min-h-screen bg-gradient-to-b from-purple to-pink">
   <div class="size-24 relative top-3 left-5">
     <img src={logo} alt="logo" />
   </div>
@@ -6,8 +6,6 @@
     <div class="w-full m-5 px-10">
         {#if roomId}
             {#if gameActive}
-                <h3>active turn {roomState.activeTurn}</h3>
-                <h3>completed: {roomState.isCompleted}</h3>
                 {#if activeTurn}
                     <SelectInstrument 
                         instrumentId={me!.sequencer!.instrumentId} 
@@ -60,8 +58,8 @@
                         >
                     {/if}
                 </div>
-            {:else}
-                <div class="flex flex-row items-center justify-center space-x-8 h-full">
+            {:else}       
+                <div class="flex flex-row items-center justify-center space-x-8 translate-y-20 h-full animate-fade">
                     <div class="bg-white bg-opacity-10 rounded-lg p-4 w-96">
                         <h3 class="text-white text-center font-bold text-lg mb-4">
                             Players

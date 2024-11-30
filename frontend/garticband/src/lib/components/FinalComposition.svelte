@@ -2,6 +2,7 @@
     import SelectInstrument from "$lib/components/SelectInstrument.svelte";
     import { onMount } from "svelte";
     import type { FinalCompositionProps } from '$lib/types'
+    import spongebob from "$lib/images/spongebob.gif";
 
     const { roomState, timeSteps, ...others }: FinalCompositionProps = $props()
 
@@ -41,7 +42,7 @@
 
 <div>
     {#if loading}
-        <div class="flex flex-col items-center justify-center translate-y-60 space-y-4">
+        <div class="flex flex-col items-center justify-center translate-y-60 space-y-4 animate-fade">
             <h1 class="text-white text-center font-bold text-lg animate-bounce">Combining your music...</h1>
             <div class="w-[800px] bg-grey rounded-full overflow-hidden border border-white">
                 <div 
@@ -49,11 +50,12 @@
                     style="width: {progress}%;">
                 </div>
             </div>
+            <img src={spongebob} alt="combining img" class="mt-8"/>
         </div>
     {:else}
-        {#each roomState.players as player}
-            <h3>{player.sequencer.instrumentId}</h3>
-            
+        <div class="animate-fade">
+            {#each roomState.players as player}
+            <h3 class="text-white font-bold text-xl">{player.sequencer.instrumentId}</h3>
             <SelectInstrument
                 instrumentId={player.sequencer.instrumentId}
                 roomState={roomState}
@@ -64,9 +66,10 @@
                 {centralAudioContext}
                 {timeSteps}
                 {...others}
-            
-            />
-        {/each}
+
+                />
+            {/each}
+        </div>
     {/if}
-    
+
 </div>

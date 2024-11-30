@@ -4,7 +4,17 @@ export default {
   content: ["./src/**/*.{html,js,svelte,ts}"],
 
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        fade: 'fadeIn .5s ease-in-out',
+      },
+      keyframes: {
+				fadeIn: {
+					from: { opacity: '0' },
+					to: { opacity: '1' },
+				},
+			},
+    },
     colors: {
       purple: "#310148",
       pink: "#b515b0",
@@ -22,6 +32,7 @@ export default {
       green: "#008000",
       lightgreen: "#15803d",
     },
+    
   },
 
   plugins: [],

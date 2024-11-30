@@ -187,7 +187,7 @@ io.on("connection", (socket) => {
     socket.on("choose_drum", async (data) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "drums"
+        player.sequencer.instrumentId = "Drums"
 
         io.to(roomId).emit("update_instrument", {
             roomState: room, instrument: "drums"
@@ -197,7 +197,7 @@ io.on("connection", (socket) => {
     socket.on("choose_synth", async (data) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "synth"
+        player.sequencer.instrumentId = "Synth"
 
         io.to(roomId).emit("update_instrument", {
             roomState: room, instrument: "synth"
@@ -207,7 +207,7 @@ io.on("connection", (socket) => {
     socket.on("choose_bass", async (data) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "bass"
+        player.sequencer.instrumentId = "Bass"
 
         io.to(roomId).emit("update_instrument", {
             roomState: room, instrument: "bass"
@@ -217,7 +217,7 @@ io.on("connection", (socket) => {
     socket.on("choose_piano", async (data) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "piano"
+        player.sequencer.instrumentId = "Piano"
 
         io.to(roomId).emit("update_instrument", {
             roomState: room, instrument: "piano"
@@ -244,7 +244,7 @@ io.on("connection", (socket) => {
             io.to(roomId).emit("new_turn", {
                 roomState: room
             })
-            await delay(TURN_DURATION + 5000)
+            await delay(TURN_DURATION + 10000)
         }
         room.activeTurn = null
         room.isCompleted = true
@@ -254,7 +254,7 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("game_finished", {
             roomState: room
         })
-        await delay(TURN_DURATION + 5000)
+        await delay(TURN_DURATION + 10000)
         room.gameOver = true
         room.players.forEach(user => {
             user.sequencer = {
@@ -272,7 +272,7 @@ io.on("connection", (socket) => {
         const room = rooms.get(roomId)
         const lobby = playersInLobby.get(roomId)
     
-        if (!lobby.has(socket.id))
+        if (!lobby?.has(socket.id))
             lobby.add(socket.id)
 
         room.gameOver = false

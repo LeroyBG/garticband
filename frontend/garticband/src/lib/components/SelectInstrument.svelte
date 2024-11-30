@@ -24,7 +24,7 @@
                 setTimeout(() => {
                     clearInterval(intervalId)
                     isPreview = 1
-                }, 5000);
+                }, 10000);
         }
     });
 
@@ -33,8 +33,9 @@
 <!--This has a bug if someone leaves midway in the game-->
 {#if isPreview > 1}
     {@const player = roomState.players[curPlayer!-2]}
-    <h1>PREVIEW</h1>
-    <SelectInstrument
+    <div class="animate-fade">
+        <h1 class="text-white text-center font-bold text-lg animate-bounce">PREVIEW</h1>
+        <SelectInstrument
             instrumentId={player.sequencer.instrumentId}
             roomState={roomState}
             curPlayer={1}
@@ -44,17 +45,23 @@
             {centralAudioContext}
             {timeSteps}
             {...others}
-        
         />
+    </div>
+
+    
+
 {:else}
-    {#if instrumentId == "drums"}
+<div class="animate-fade">
+    {#if instrumentId == "Drums"}
     <Drums {timeSteps} {...others} />
-    {:else if instrumentId == "piano"}
+    {:else if instrumentId == "Piano"}
     <Piano {timeSteps} {...others} />
-    {:else if instrumentId == "bass"}
+    {:else if instrumentId == "Bass"}
     <Bass {timeSteps} {...others} />
     {:else }
     <Synth {timeSteps} {...others} />
     {/if}
+</div>
+    
 {/if}
 
