@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, untrack } from 'svelte';
     import { type SequencerProps } from "$lib/types";
+    import SequencerButton from './SequencerButton.svelte';
     const { 
         rows,
         disabled,
@@ -10,12 +11,11 @@
         selectedSquareActive,
         hasBlackKeys,
         io,
+        sampleIconSources
     }: SequencerProps = $props()
     let sequencerState = $state<boolean[][]>(initialState ?? Array(rows).fill(Array(timeSteps).fill(false)))
 
     let tick = $state<number>(0)
-
-    console.log(initialState)
 
     /*
                                     COL INDEX
@@ -25,38 +25,11 @@
         2       False   ...     ...     ...     ...     ...     ...     ...
         3       False   ...     ...     ...     ...     ...     ...     ...
     */
-    
-    const constructConditionalKeyStyling = (selected: boolean, active: boolean, black: boolean, colIndex: number): string => {
-        if (active) {
-            // this is for the moving ticker colors
-            return selected ? "bg-lightred border-4 border-lightred" : "bg-white border-2 border-white"
-        } else {
-            // this is for practically all buttons except for the active ones
-            // border-2 border-${(colIndex % 4 == 0) ? "darkred" : "purple"}
-            let style = `border-2 border-indigo `
-            if (selected) {
-                // style += (black) ? "bg-green-400" : "bg-green-200"
-                style += "bg-indigo"
-            } else {
-                style += (black) ? "pink" : ""
-            }
-            return style
-        }
-    }
 
     // Which keys should be colored black
     // Using indexing rows from the top (because of how they're created in the
     // #each statement) using 0-based indexing 
     const blackKeyIndices = new Set(hasBlackKeys ? [1, 3, 5, 8, 10] : [])
-    const sequencerStyle = $derived<string[][]>(sequencerState.map((row, i) => {
-        return row.map((_, j) => {
-            return constructConditionalKeyStyling(
-                sequencerState[i][j], 
-                (synchronizedTick ?? tick) == j, 
-                blackKeyIndices.has(i), 
-                j)
-        })
-    }))
     
     const updateSelection = (rowIndex: number, colIndex: number) => {
         if (disabled) {
@@ -85,25 +58,31 @@
     })
 
     $effect(() => {
-        const trackedTick = synchronizedTick ?? tick
+        tick = synchronizedTick ?? tick
         for (let i = 0; i < untrack(() => sequencerState).length; i++) {
-                if (untrack(() => sequencerState)[i][trackedTick]) {
+                if (untrack(() => sequencerState)[i][tick]) {
                     selectedSquareActive(i)
                 }
             }
     })
-
 </script>
 
-<div id="selection grid container" class="gap-4 flex flex-col ml-[10%] mr-[10%] mt-[3%] bg-darkgrey px-2 py-6 rounded-md shadow-xl">
+<div id="selection grid container" class="gap-2 flex flex-col bg-darkgrey p-2 rounded-sm">
     {#each sequencerState as row, rowIndex}
-        <div class="flex flex-row justify-evenly">
-            {#each row as node, colIndex}
-                <!-- svelte-ignore a11y_consider_explicit_label -->
-                <button type="button" 
-                    onclick={()=>updateSelection(rowIndex, colIndex)} 
-                    class={"h-6 w-6 " + sequencerStyle[rowIndex][colIndex]}
-                ></button>
+        <div class="flex flex-row justify-between">
+            {#if sampleIconSources}
+                <img src={sampleIconSources[rowIndex]} alt="sample icon" class="h-9 w-9" style="filter: invert(1);"/>
+            {/if}
+            {#each row as _, colIndex}
+                <div id="sequencerbutton-wrapper" class={"h-10 w-10 " + (((colIndex % 4 == 0) && colIndex != 0) ? "ml-2" : "")}>
+                    <!-- svelte-ignore a11y_consider_explicit_label -->
+                    <SequencerButton 
+                        onclick={()=>updateSelection(rowIndex, colIndex)} 
+                        isActive={colIndex == (tick)}
+                        isBlackKey={blackKeyIndices.has(rowIndex)}
+                        isSelected={sequencerState[rowIndex][colIndex]}
+                    ></SequencerButton>
+                </div>
             {/each}
         </div>
     {/each}

@@ -31,6 +31,8 @@ export default {
       blue: "#0080FE",
       green: "#008000",
       lightgreen: "#15803d",
+      sequencerButtonPurple: "#32244B",
+      sequencerButtonPink: "#45193C"
     },
     
   },

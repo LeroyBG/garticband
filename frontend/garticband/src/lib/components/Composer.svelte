@@ -12,7 +12,7 @@
     import { onMount } from "svelte";
     import { type ComposerProps  } from "$lib/types";
 
-    let audioContext = centralAudioContext ?? new AudioContext()
+    let audioContext: AudioContext|null = null
 
     const rows = sampleFileNames.length
     const sources: (AudioBufferSourceNode|null)[] = Array(rows).fill(null)
@@ -43,15 +43,16 @@
             sources[row].stop()
             sources[row] = null
         }
-        sources[row] = audioContext.createBufferSource()
-        sources[row].buffer = audioBuffers![row]
-        sources[row].connect(audioContext.destination)
-        sources[row].onended = () => {sources[row] = null}
-        sources[row].start()
+        sources[row] = audioContext?.createBufferSource() ?? null
+        sources[row]!.buffer = audioBuffers![row]
+        sources[row]!.connect(audioContext!.destination)
+        sources[row]!.onended = () => {sources[row] = null}
+        sources[row]!.start()
     }
 
     
     onMount(async () => {
+        audioContext = centralAudioContext ?? new AudioContext()
         audioBuffers =  await getAudioBuffers(audioContext)
         initializing = false
     })
