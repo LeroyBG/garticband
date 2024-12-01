@@ -52,11 +52,11 @@
 
 {:else}
 <div class="animate-fade">
-    {#if instrumentId == "Drums"}
+    {#if instrumentId == "drums"}
     <Drums {timeSteps} {...others} />
-    {:else if instrumentId == "Piano"}
+    {:else if instrumentId == "piano"}
     <Piano {timeSteps} {...others} />
-    {:else if instrumentId == "Bass"}
+    {:else if instrumentId == "bass"}
     <Bass {timeSteps} {...others} />
     {:else }
     <Synth {timeSteps} {...others} />

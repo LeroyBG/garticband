@@ -4,17 +4,25 @@
 
 import type { Socket } from "socket.io-client"
 
+export interface SequencerButtonProps {
+    onclick: () => void,
+    isActive: boolean,
+    isSelected: boolean,
+    isBlackKey: boolean
+}
+
 export interface SequencerProps {
     rows: number
     timeSteps: number,
     disabled?: boolean,
     initialState?: boolean[][],
     synchronizedTick?: number,
+    sampleIconSources?: string[]
     selectedSquareActive: (row: number) => void,
     hasBlackKeys: boolean, // Keys like a piano
     // Has to explicity be null otherwise we could unintentionally lose 
     // connection to backend
-    io: Socket | null 
+    io: Socket | null
 }
 
 export interface SelectProps {
