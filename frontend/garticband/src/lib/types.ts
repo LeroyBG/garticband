@@ -74,5 +74,7 @@ export type roomInfo = {
     activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
     selectPhase: boolean,
     isCompleted: boolean,
-    gameOver: boolean
+    gameOver: boolean,
+    sequencerTimeSteps: number,
+    previewDuration: number // TODO: Remove and have the preview be a signal from the server
 }

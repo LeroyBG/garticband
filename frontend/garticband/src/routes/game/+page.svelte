@@ -11,7 +11,7 @@
                         instrumentId={me!.sequencer!.instrumentId} 
                         roomState={roomState}
                         curPlayer={me!.turnNumber}
-                        timeSteps={NUM_TIMESTEPS} 
+                        timeSteps={timeSteps!} 
                         io={io} 
                     />
                 {:else if upNext}
@@ -26,7 +26,7 @@
                 {#if gameOver}
                     <GameOver {io} />
                 {:else}
-                    <FinalComposition {roomState} {io} timeSteps={NUM_TIMESTEPS} />
+                    <FinalComposition {roomState} {io} timeSteps={timeSteps!} />
                 {/if}
             {:else if instrumentSelectActive}
                 <div>
@@ -169,7 +169,9 @@
         selectPhase: false,
         activeTurn: null,
         isCompleted: false,
-        gameOver: false
+        gameOver: false,
+        sequencerTimeSteps: 0,
+        previewDuration: 0
     })
 
     let takenInstruments = $state({
@@ -181,8 +183,6 @@
 
     let genre = $state<string|null>("")
     let fullLobby = $state<boolean|null>(false)
-
-    const NUM_TIMESTEPS = 32
 
     // Find ourself in the array
     let me = $derived<playerInRoom|null>(roomState.players.find(p => p.id == io.id) ?? null)
@@ -211,6 +211,10 @@
         (roomState.activeTurn && me?.turnNumber) ? 
             (roomState.activeTurn > me.turnNumber) :
             null
+    )
+
+    let timeSteps = $derived<number|null>(
+        roomState.sequencerTimeSteps ?? null
     )
 
     const changeReady = () => {
@@ -342,4 +346,4 @@
       var copyText = roomId !== null ? roomId : "None";
       navigator.clipboard.writeText(copyText);
     }
-  </script>
+</script>
