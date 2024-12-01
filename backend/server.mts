@@ -15,7 +15,32 @@ import { delay } from './util/util.mts'
 // });
 
 const app = express()
-const { PORT, FRONTEND_URL } = process.env
+const {
+    PORT,
+    FRONTEND_URL,  
+} = process.env
+
+if (PORT == undefined) {
+    throw new Error("Provide a port for the server to run on in the " +
+        "backend/.env file. Read the running instruction in README.md in the" +
+        "root of the project.")
+}
+if (FRONTEND_URL == undefined) {
+    throw new Error("Provide the frontend url (with no trailing forward " +
+        "slashes) in the backend/.env file. Read the running instruction in " +
+        "README.md in the root of the project.")
+}
+
+const parseNumberWithDefault = (possibleNumber: string | undefined, defaultVal: number) => {
+    const parsed = parseInt(possibleNumber)
+    return !Number.isNaN(parsed) ? parsed : defaultVal
+}
+
+
+const PREVIEW_DURATION = parseNumberWithDefault(process.env.PREVIEW_DURATION_SECS, 10) * 1000
+const TURN_DURATION = parseNumberWithDefault(process.env.TURN_DURATION_SECS, 30) * 1000
+const NUM_TIMESTEPS = parseNumberWithDefault(process.env.NUM_TIMESTEPS, 32)
+const PLAYERS_IN_ROOM = parseNumberWithDefault(process.env.PLAYERS_IN_ROOM, 4)
 
 app.use(express.json())
 app.use(cors({
@@ -30,8 +55,6 @@ const httpServer = createServer(app)
 
 // * * * * * * * * * * Socket logic * * * * * * * * * *
 // Super temporary mapping of turn number to instruments
-const TURN_DURATION = 30 * 1000 // 30 sec
-const NUM_PLAYERS_PER_ROOM = 4
 
 const genres = [
     "Jazz",
@@ -50,24 +73,27 @@ const instruments = [
 let playersInLobby = new Map<roomId, Set<string>>()
 
 type roomId = string // null if no instrument selected
+type instrumentId = "drums" | "bass" | "synth" | "piano" // Update when more instruments added
 
-type playerInRoom = {
-    turnNumber: number // null if not yet decided
+export type playerInRoom = {
+    turnNumber: number | null // null if not yet decided,
     id: string,
     name: string,
     ready: boolean,
     sequencer: {
         selectionGrid: boolean[][] | null, // null if no instrument selected
-        instrumentId: string
+        instrumentId: instrumentId
     },
 }
 
-type roomInfo = {
+export type roomInfo = {
     players: playerInRoom[],
-    selectPhase: boolean,
     activeTurn: number | null, // i.e. 1, 2, 3, 4,..., null if no active turn,
+    selectPhase: boolean,
     isCompleted: boolean,
-    gameOver: boolean
+    gameOver: boolean,
+    sequencerTimeSteps: number,
+    previewDuration: number // TODO: Remove and have the preview be a signal from the server
 }
 
 const rooms = new Map<roomId, roomInfo>()
@@ -101,7 +127,7 @@ io.on("connection", (socket) => {
                 ready: false,
                 sequencer: {
                     instrumentId: null,   // REPLACE THIS NULL
-                    selectionGrid: Array(8).fill(Array(16).fill(false))
+                    selectionGrid: null
                 }
             }
             const room: roomInfo = {
@@ -109,7 +135,9 @@ io.on("connection", (socket) => {
                 selectPhase: false,
                 activeTurn: null,
                 isCompleted: false,
-                gameOver: false
+                gameOver: false,
+                sequencerTimeSteps: NUM_TIMESTEPS,
+                previewDuration: PREVIEW_DURATION
             }
             socket.join(data.roomId)
             rooms.set(data.roomId, room)
@@ -121,7 +149,7 @@ io.on("connection", (socket) => {
                 if (v.id == socket.id)
                     playerAlreadyInRoomDataStructure = true
             })
-            if (room.players.length >= NUM_PLAYERS_PER_ROOM) {
+            if (room.players.length >= PLAYERS_IN_ROOM) {
                 console.log("someone tried to join a room that's full")
                 return
             }
@@ -140,7 +168,7 @@ io.on("connection", (socket) => {
                     sequencer: {
                         instrumentId: null,  // REPLACE IT WITH NULL
                         // Hardcoded selection grid for now
-                        selectionGrid: Array(8).fill(Array(16).fill(false))
+                        selectionGrid: null
                     }
                 }
                 room.players.push(newPlayer)
@@ -187,7 +215,7 @@ io.on("connection", (socket) => {
     socket.on("choose_drum", async (data) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "Drums"
+        player.sequencer.instrumentId = "drums"
 
         io.to(roomId).emit("update_instrument", {
             roomState: room, instrument: "drums"
@@ -197,7 +225,7 @@ io.on("connection", (socket) => {
     socket.on("choose_synth", async (data) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "Synth"
+        player.sequencer.instrumentId = "synth"
 
         io.to(roomId).emit("update_instrument", {
             roomState: room, instrument: "synth"
@@ -207,7 +235,7 @@ io.on("connection", (socket) => {
     socket.on("choose_bass", async (data) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "Bass"
+        player.sequencer.instrumentId = "bass"
 
         io.to(roomId).emit("update_instrument", {
             roomState: room, instrument: "bass"
@@ -217,7 +245,7 @@ io.on("connection", (socket) => {
     socket.on("choose_piano", async (data) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "Piano"
+        player.sequencer.instrumentId = "piano"
 
         io.to(roomId).emit("update_instrument", {
             roomState: room, instrument: "piano"
@@ -234,17 +262,16 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("game_started", {
             roomState: room
         })
+        console.log("Game started")
         await delay(TURN_DURATION)
-        for (let i = 1; i < NUM_PLAYERS_PER_ROOM; i++) {
+        for (let i = 1; i < PLAYERS_IN_ROOM; i++) {
             console.log("next turn")
             
-            // NEED SOME SORT OF PREVIEW THING
-
             room.activeTurn++
             io.to(roomId).emit("new_turn", {
                 roomState: room
             })
-            await delay(TURN_DURATION + 10000)
+            await delay(TURN_DURATION + PREVIEW_DURATION)
         }
         room.activeTurn = null
         room.isCompleted = true
@@ -254,12 +281,13 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("game_finished", {
             roomState: room
         })
-        await delay(TURN_DURATION + 10000)
+        console.log("game finished")
+        await delay(TURN_DURATION + PREVIEW_DURATION)
         room.gameOver = true
         room.players.forEach(user => {
             user.sequencer = {
                 instrumentId: null,   
-                selectionGrid: Array(8).fill(Array(16).fill(false))
+                selectionGrid: null
             }
             user.ready = false
         })

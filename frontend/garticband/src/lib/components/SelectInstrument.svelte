@@ -24,7 +24,7 @@
                 setTimeout(() => {
                     clearInterval(intervalId)
                     isPreview = 1
-                }, 10000);
+                }, roomState.previewDuration);
         }
     });
 

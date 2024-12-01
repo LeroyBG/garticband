@@ -55,7 +55,8 @@
     {:else}
         <div class="animate-fade">
             {#each roomState.players as player}
-            <h3 class="text-white font-bold text-xl">{player.sequencer.instrumentId}</h3>
+            {@const instrumentId = player.sequencer.instrumentId}
+            <h3 class="text-white font-bold text-xl">{instrumentId[0].toUpperCase() + instrumentId.slice(1)}</h3>
             <SelectInstrument
                 instrumentId={player.sequencer.instrumentId}
                 roomState={roomState}
