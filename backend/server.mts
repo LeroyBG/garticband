@@ -212,43 +212,13 @@ io.on("connection", (socket) => {
         })
     })
 
-    socket.on("choose_drum", async (data) => {
+    socket.on("choose_instrument", ({id}:{id: instrumentId}) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "drums"
+        player.sequencer.instrumentId = id
 
         io.to(roomId).emit("update_instrument", {
-            roomState: room, instrument: "drums"
-        })
-    })
-
-    socket.on("choose_synth", async (data) => {
-        const room = rooms.get(roomId)
-        let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "synth"
-
-        io.to(roomId).emit("update_instrument", {
-            roomState: room, instrument: "synth"
-        })
-    })
-
-    socket.on("choose_bass", async (data) => {
-        const room = rooms.get(roomId)
-        let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "bass"
-
-        io.to(roomId).emit("update_instrument", {
-            roomState: room, instrument: "bass"
-        })
-    })
-
-    socket.on("choose_piano", async (data) => {
-        const room = rooms.get(roomId)
-        let player = room.players.find(p => p.id == socket.id)
-        player.sequencer.instrumentId = "piano"
-
-        io.to(roomId).emit("update_instrument", {
-            roomState: room, instrument: "piano"
+            newRoomState: room, instrument: id
         })
     })
 

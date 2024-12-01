@@ -3,7 +3,7 @@
     <img src={logo} alt="logo" />
   </div>
   
-    <div class="w-full m-5 px-10">
+    <div class="w-full h-full m-5 px-10">
         {#if roomId}
             {#if gameActive}
                 {#if activeTurn}
@@ -29,31 +29,34 @@
                     <FinalComposition {roomState} {io} timeSteps={timeSteps!} />
                 {/if}
             {:else if instrumentSelectActive}
-                <div>
-                    <h2>{genre}</h2>
-                    <button 
-                        id="drums" 
-                        class="rounded-full bg-yellow py-2 px-4 font-bold" 
-                        onclick={chooseDrum}>Drum</button
-                    >
-                    <button 
-                        id="piano" 
-                        class="rounded-full bg-indigo py-2 px-4 font-bold" 
-                        onclick={choosePiano}>Piano</button
-                    >
-                    <button 
-                        id="synth" 
-                        class="rounded-full bg-blue py-2 px-4 font-bold" 
-                        onclick={chooseSynth}>Synth</button
-                    >
-                    <button 
-                        id="bass" 
-                        class="rounded-full bg-darkred py-2 px-4 font-bold" 
-                        onclick={chooseBass}>Bass</button
-                    >
+                <div class="h-full flex flex-col justify-start items-center">
+                    <h2 class="text-white text-3xl">Genre: {genre}</h2>
+                    <!-- TODO: Change number of rows and cols to dynamically fit number of instruments or just use flexbox -->
+                    <div class="grid grid-rows-2 grid-cols-2 w-full gap-4 flex-grow h-96 my-9">
+                        <button 
+                            id="drums" 
+                            class="rounded-lg {takenInstruments["drums"] ? "bg-grey" : "bg-yellow"} text-white py-2 px-4 font-bold" 
+                            onclick={()=>chooseInstrument("drums")}>Drum</button
+                        >
+                        <button 
+                            id="piano" 
+                            class="rounded-lg {takenInstruments["piano"] ? "bg-grey" : "bg-indigo"} text-white py-2 px-4 font-bold" 
+                            onclick={()=>chooseInstrument("piano")}>Piano</button
+                        >
+                        <button 
+                            id="synth" 
+                            class="rounded-lg {takenInstruments["synth"] ? "bg-grey" : "bg-blue"} text-white py-2 px-4 font-bold" 
+                            onclick={()=>chooseInstrument("synth")}>Synth</button
+                        >
+                        <button 
+                            id="bass" 
+                            class="rounded-lg {takenInstruments["bass"] ? "bg-grey" : "bg-darkred"} text-white py-2 px-4 font-bold" 
+                            onclick={()=>chooseInstrument("bass")}>Bass</button
+                        >
+                    </div>
                     {#if instrumentDone}
                         <button 
-                            class="rounded-full bg-green hover:bg-yellow py-2 px-4 font-bold" 
+                            class="rounded-full bg-green hover:bg-yellow py-2 px-4 font-bold w-32 text-white" 
                             onclick={startGame}>Let's GO</button
                         >
                     {/if}
@@ -153,7 +156,7 @@
     import GameOver from "$lib/components/GameOver.svelte";
 
     // Types
-    import { type playerInRoom, type roomInfo } from "$lib/types";
+    import { type playerInRoom, type roomInfo, type instrumentId } from "$lib/types";
     import SelectInstrument from "$lib/components/SelectInstrument.svelte";
   
     // Name of user
@@ -185,7 +188,7 @@
     let fullLobby = $state<boolean|null>(false)
 
     // Find ourself in the array
-    let me = $derived<playerInRoom|null>(roomState.players.find(p => p.id == io.id) ?? null)
+    let me = $derived<playerInRoom|null>(roomState?.players?.find(p => p.id == io.id) ?? null)
 
     let instrumentSelectActive = $derived<boolean>(roomState.selectPhase == true)
     let instrumentDone = $derived<boolean>(Object.values(takenInstruments).every(value => value === true))
@@ -225,43 +228,13 @@
       io.emit("start_select", {});
     };
   
-    const chooseDrum = () => {
+    const chooseInstrument = (id: instrumentId) => {
       // add a check where it only does this if we don't have an instrument selected
       if (
         me?.sequencer.instrumentId == null &&
-        takenInstruments["drums"] == false
+        takenInstruments[id] == false
       ) {
-        io.emit("choose_drum", {});
-      }
-    };
-    // add other instrument selections
-    const chooseSynth = () => {
-      // add a check where it only does this if we don't have an instrument selected
-      if (
-        me?.sequencer.instrumentId == null &&
-        takenInstruments["synth"] == false
-      ) {
-        io.emit("choose_synth", {});
-      }
-    };
-  
-    const chooseBass = () => {
-      // add a check where it only does this if we don't have an instrument selected
-      if (
-        me?.sequencer.instrumentId == null &&
-        takenInstruments["bass"] == false
-      ) {
-        io.emit("choose_bass", {});
-      }
-    };
-  
-    const choosePiano = () => {
-      // add a check where it only does this if we don't have an instrument selected
-      if (
-        me?.sequencer.instrumentId == null &&
-        takenInstruments["piano"] == false
-      ) {
-        io.emit("choose_piano", {});
+        io.emit("choose_instrument", {id: id});
       }
     };
   
@@ -305,11 +278,11 @@
             fullLobby = data.fullLobby
         })
 
-        io.on("update_instrument", (data) => {
-            roomState = data.roomState
-            takenInstruments[data.instrument as keyof typeof takenInstruments] = true
-            var btn = document.querySelector("#" + data.instrument)
-            btn?.classList.add("bg-grey")
+        io.on("update_instrument", 
+                ({newRoomState, instrument}: {newRoomState: roomInfo, instrument: instrumentId}) => {
+            console.log("someone chose " + instrument)
+            roomState = newRoomState
+            takenInstruments[instrument] = true
         })
 
         io.on("game_started", (data) => {
@@ -346,4 +319,7 @@
       var copyText = roomId !== null ? roomId : "None";
       navigator.clipboard.writeText(copyText);
     }
+
+    $inspect(takenInstruments)
+    $inspect(me)
 </script>

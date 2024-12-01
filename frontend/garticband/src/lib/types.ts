@@ -44,7 +44,7 @@ export interface ComposerProps extends Omit<SequencerProps, "selectedSquareActiv
 
 export type InstrumentProps = Omit<ComposerProps, "sampleFileNames" | "mutuallyExclusiveNotes" | "hasBlackKeys">
 
-type instrumentId = "drums" | "bass" | "synth" | "piano"
+export type instrumentId = "drums" | "bass" | "synth" | "piano"
 
 export interface SelectInstrumentProps extends InstrumentProps {
     instrumentId: instrumentId,
