@@ -1,4 +1,4 @@
-<div class="w-screen min-h-screen bg-gradient-to-b from-purple to-pink">
+<div class="w-full min-h-screen bg-gradient-to-b from-purple to-pink">
   <div class="size-24 relative top-3 left-5">
     <img src={logo} alt="logo" />
   </div>
@@ -23,34 +23,31 @@
                 {/if}
             <!-- ADD CASE FOR SELECT INSTRUMENT -->
             {:else if gameFinished}
-                {#if gameOver}
-                    <GameOver {io} />
-                {:else}
-                    <FinalComposition {roomState} {io} timeSteps={timeSteps!} />
-                {/if}
+                <FinalComposition {roomState} {io} timeSteps={timeSteps!} />
+        
             {:else if instrumentSelectActive}
-                <div class="h-full flex flex-col justify-start items-center">
-                    <h2 class="text-white text-3xl">Genre: {genre}</h2>
+                <div class="h-full flex flex-col justify-start items-center animate-fade">
+                    <h2 class="text-white font-bold text-3xl">Genre: {genre}</h2>
                     <!-- TODO: Change number of rows and cols to dynamically fit number of instruments or just use flexbox -->
                     <div class="grid grid-rows-2 grid-cols-2 w-full gap-4 flex-grow h-96 my-9">
                         <button 
                             id="drums" 
-                            class="rounded-lg {takenInstruments["drums"] ? "bg-grey" : "bg-yellow"} text-white py-2 px-4 font-bold" 
+                            class="rounded-lg {takenInstruments["drums"] ? "bg-grey" : "bg-yellow"} text-white text-xl py-2 px-4 font-bold" 
                             onclick={()=>chooseInstrument("drums")}>Drum</button
                         >
                         <button 
                             id="piano" 
-                            class="rounded-lg {takenInstruments["piano"] ? "bg-grey" : "bg-indigo"} text-white py-2 px-4 font-bold" 
+                            class="rounded-lg {takenInstruments["piano"] ? "bg-grey" : "bg-indigo"} text-white text-xl py-2 px-4 font-bold" 
                             onclick={()=>chooseInstrument("piano")}>Piano</button
                         >
                         <button 
                             id="synth" 
-                            class="rounded-lg {takenInstruments["synth"] ? "bg-grey" : "bg-blue"} text-white py-2 px-4 font-bold" 
+                            class="rounded-lg {takenInstruments["synth"] ? "bg-grey" : "bg-blue"} text-white text-xl py-2 px-4 font-bold" 
                             onclick={()=>chooseInstrument("synth")}>Synth</button
                         >
                         <button 
                             id="bass" 
-                            class="rounded-lg {takenInstruments["bass"] ? "bg-grey" : "bg-darkred"} text-white py-2 px-4 font-bold" 
+                            class="rounded-lg {takenInstruments["bass"] ? "bg-grey" : "bg-darkred"} text-white text-xl py-2 px-4 font-bold" 
                             onclick={()=>chooseInstrument("bass")}>Bass</button
                         >
                     </div>

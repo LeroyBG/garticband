@@ -252,13 +252,7 @@ io.on("connection", (socket) => {
             roomState: room
         })
         console.log("game finished")
-        await delay(TURN_DURATION + PREVIEW_DURATION)
-        room.gameOver = true
         room.players.forEach(user => {
-            user.sequencer = {
-                instrumentId: null,   
-                selectionGrid: null
-            }
             user.ready = false
         })
         io.to(roomId).emit("game_over", {
@@ -279,8 +273,16 @@ io.on("connection", (socket) => {
             roomState: room
         })
 
-        if (lobby.size == 4)
+        if (lobby.size == 4) {
+            room.players.forEach(user => {
+                user.sequencer = {
+                    instrumentId: null,   
+                    selectionGrid: null
+                }
+            })
             io.to(roomId).emit("update_lobby", {fullLobby: true})
+        }
+            
     })
 
     // Broadcast updates to players' sequencers

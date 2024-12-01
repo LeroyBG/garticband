@@ -4,7 +4,7 @@
     import type { FinalCompositionProps } from '$lib/types'
     import spongebob from "$lib/images/spongebob.gif";
 
-    const { roomState, timeSteps, ...others }: FinalCompositionProps = $props()
+    const { roomState, timeSteps, io, ...others }: FinalCompositionProps = $props()
 
     let tick = $state<number>(0)
     let progress = $state<number>(0);
@@ -36,6 +36,10 @@
         return () => clearInterval(intervalId)
     }
 
+    const backLobby = () => {
+        io?.emit("back_lobby", {});
+    };
+
     $inspect("final room state", roomState)
 
 </script>
@@ -66,10 +70,17 @@
                 synchronizedTick={tick}
                 {centralAudioContext}
                 {timeSteps}
+                {io}
                 {...others}
 
                 />
             {/each}
+            <div class="flex flex-col items-center justify-center space-y-4">
+                <button
+                    class="bg-blue-500 text-black font-medium px-4 py-2 rounded-md mt-8 bg-beige shadow-lg shadow-black hover:shadow-lg hover:shadow-beige/30 mb-8"
+                    onclick={backLobby}>Back to Lobby</button
+                >
+            </div>
         </div>
     {/if}
 
