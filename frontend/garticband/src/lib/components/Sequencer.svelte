@@ -74,7 +74,7 @@
                 <img src={sampleIconSources[rowIndex]} alt="sample icon" class="h-9 w-9" style="filter: invert(1);"/>
             {/if}
             {#each row as _, colIndex}
-                <div id="sequencerbutton-wrapper" class={"h-10 w-10 " + (((colIndex % 4 == 0) && colIndex != 0) ? "ml-2" : "")}>
+                <div id="sequencerbutton-wrapper" class={"h-9 w-9 " + (((colIndex % 4 == 0) && colIndex != 0) ? "ml-2" : "")}>
                     <!-- svelte-ignore a11y_consider_explicit_label -->
                     <SequencerButton 
                         onclick={()=>updateSelection(rowIndex, colIndex)} 
