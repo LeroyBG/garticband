@@ -1,3 +1,8 @@
+<!--
+  @component
+
+  One interactive button on the music composition sequencer. 
+-->
 <script lang="ts">
     import type { SequencerButtonProps } from "$lib/types";
 

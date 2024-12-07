@@ -1,3 +1,8 @@
+<!--
+  @component
+
+  Page to display when game complete, players should hear total composition for all players
+-->
 <script lang="ts">
     import SelectInstrument from "$lib/components/SelectInstrument.svelte";
     import { onMount } from "svelte";

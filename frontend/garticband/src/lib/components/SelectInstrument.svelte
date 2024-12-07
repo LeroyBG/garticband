@@ -1,3 +1,8 @@
+<!--
+  @component
+
+  Timestep and sound logic for instruments
+-->
 <script lang="ts">
     import Drums from '$lib/components/instruments/Drums.svelte'
     import Bass from '$lib/components/instruments/Bass.svelte'
