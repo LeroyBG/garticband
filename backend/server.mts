@@ -111,16 +111,11 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-<<<<<<< Updated upstream
     console.log("Client succesfully established connection with central server")
-=======
-  console.log("client connected");
->>>>>>> Stashed changes
 
-  // establish the room ID holder
-  let roomId: roomId | null = null;
+    // establish the room ID holder
+    let roomId: roomId|null = null
 
-<<<<<<< Updated upstream
     socket.on("join_room", (data) => {
         console.log("Client is trying to join a room with following room ID and name:")
         console.log(data)
@@ -165,150 +160,78 @@ io.on("connection", (socket) => {
                 console.log("Client tried to join a room that's full which should fail")
                 return
             }
-=======
-  socket.on("join_room", (data) => {
-    console.log("someone is trying to join a room");
 
-    // server now holds roomId for specific client
-    roomId = data.roomId;
-    const room = rooms.get(roomId) ?? null;
->>>>>>> Stashed changes
+            if (!playerAlreadyInRoomDataStructure) {
+                // Assign player a turn number based on the order they joined the room
+                // TODO: Make turn number random
 
-    // If the room doesn't exist, create it
-    if (!room) {
-      console.log("room doesn't exist so we create it");
-      const player: playerInRoom = {
-        turnNumber: 1,
-        id: socket.id,
-        name: data.name,
-        ready: false,
-        sequencer: {
-          instrumentId: null, // REPLACE THIS NULL
-          selectionGrid: null,
-        },
-      };
-      const room: roomInfo = {
-        players: [player],
-        selectPhase: false,
-        activeTurn: null,
-        isCompleted: false,
-        gameOver: false,
-        sequencerTimeSteps: NUM_TIMESTEPS,
-        previewDuration: PREVIEW_DURATION,
-      };
-      socket.join(data.roomId);
-      rooms.set(data.roomId, room);
-      playersInLobby.set(data.roomId, new Set<string>([socket.id]));
-      socket.emit("room_joined", {
-        roomId: roomId,
-        roomState: room,
-        fullLobby: false,
-      });
-    } else {
-      let playerAlreadyInRoomDataStructure = false;
-      room.players.forEach((v) => {
-        if (v.id == socket.id) playerAlreadyInRoomDataStructure = true;
-      });
-      if (room.players.length >= PLAYERS_IN_ROOM) {
-        console.log("someone tried to join a room that's full");
-        return;
-      }
+                // Long ass expression to get the max turn number alr in the array
+                const turnNumber = Math.max(...Array(room.players.length).fill(0).map((v, i) => room.players[i].turnNumber)) + 1
+                const newPlayer: playerInRoom = {
+                    turnNumber: turnNumber,
+                    id: socket.id,
+                    name: data.name,
+                    ready: false,
+                    sequencer: {
+                        instrumentId: null,  // REPLACE IT WITH NULL
+                        // Hardcoded selection grid for now
+                        selectionGrid: null
+                    }
+                }
+                room.players.push(newPlayer)
+            }
+            
+            
+            
+            socket.join(data.roomId)
+            const lobby = playersInLobby.get(roomId)
+            lobby.add(socket.id)
+            socket.emit("room_joined", { roomId: data.roomId, roomState: room, fullLobby: lobby.size==4 ? true : false })
+            socket.broadcast.to(data.roomId).emit("player_joined", { roomState: room, fullLobby: lobby.size==4 ? true : false })
+        }
+    })
 
-      if (!playerAlreadyInRoomDataStructure) {
-        // Assign player a turn number based on the order they joined the room
-        // TODO: Make turn number random
-
-<<<<<<< Updated upstream
     socket.on("change_ready", async (data) => {
         console.log("Server received request from player to change ready status")
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
         player.ready = !player.ready
         console.log(room)
-=======
-        // Long ass expression to get the max turn number alr in the array
-        const turnNumber =
-          Math.max(
-            ...Array(room.players.length)
-              .fill(0)
-              .map((v, i) => room.players[i].turnNumber)
-          ) + 1;
-        const newPlayer: playerInRoom = {
-          turnNumber: turnNumber,
-          id: socket.id,
-          name: data.name,
-          ready: false,
-          sequencer: {
-            instrumentId: null, // REPLACE IT WITH NULL
-            // Hardcoded selection grid for now
-            selectionGrid: null,
-          },
-        };
-        room.players.push(newPlayer);
-      }
->>>>>>> Stashed changes
 
-      socket.join(data.roomId);
-      const lobby = playersInLobby.get(roomId);
-      lobby.add(socket.id);
-      socket.emit("room_joined", {
-        roomId: data.roomId,
-        roomState: room,
-        fullLobby: lobby.size == 4 ? true : false,
-      });
-      socket.broadcast.to(data.roomId).emit("player_joined", {
-        roomState: room,
-        fullLobby: lobby.size == 4 ? true : false,
-      });
-    }
-  });
+        io.to(roomId).emit("notify_ready", {
+            roomState: room
+        })
+    })
 
-<<<<<<< Updated upstream
     // add reciever for dealing with instrument selection
     socket.on("start_select", async (data) => {
         console.log("Player has initiated instrument select phase")
         const room = rooms.get(roomId)
         room.selectPhase = true
         let i = Math.floor(Math.random() * 4)
-=======
-  socket.on("change_ready", async (data) => {
-    const room = rooms.get(roomId);
-    let player = room.players.find((p) => p.id == socket.id);
-    player.ready = !player.ready;
-    console.log(room);
->>>>>>> Stashed changes
 
-    io.to(roomId).emit("notify_ready", {
-      roomState: room,
-    });
-  });
+        const lobby = playersInLobby.get(roomId)
+        lobby.clear()
+        console.log(lobby)
 
-  // add reciever for dealing with instrument selection
-  socket.on("start_select", async (data) => {
-    const room = rooms.get(roomId);
-    room.selectPhase = true;
-    let i = Math.floor(Math.random() * 4);
+        io.to(roomId).emit("select_started", {
+            roomState: room,
+            genre: genres[i],
+            fullLobby: false
+        })
+    })
 
-<<<<<<< Updated upstream
     socket.on("choose_instrument", ({id}:{id: instrumentId}) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
         player.sequencer.instrumentId = id
         console.log("Player " + player.name + " chose instrument " + id)
-=======
-    const lobby = playersInLobby.get(roomId);
-    lobby.clear();
-    console.log(lobby);
->>>>>>> Stashed changes
 
-    io.to(roomId).emit("select_started", {
-      roomState: room,
-      genre: genres[i],
-      fullLobby: false,
-    });
-  });
+        io.to(roomId).emit("update_instrument", {
+            newRoomState: room, instrument: id
+        })
+    })
 
-<<<<<<< Updated upstream
     socket.on("start_game", async (data) => {
         console.log("All players have selected instruments and requested to start game")
         // retrieve the correct room 
@@ -397,122 +320,27 @@ io.on("connection", (socket) => {
                 if (lobby)
                     playersInLobby.delete(roomId)
             }
-=======
-  socket.on("choose_instrument", ({ id }: { id: instrumentId }) => {
-    const room = rooms.get(roomId);
-    let player = room.players.find((p) => p.id == socket.id);
-    player.sequencer.instrumentId = id;
 
-    io.to(roomId).emit("update_instrument", {
-      newRoomState: room,
-      instrument: id,
-    });
-  });
-
-  socket.on("start_game", async (data) => {
-    // retrieve the correct room
-    const room = rooms.get(roomId);
-    room.activeTurn = 1;
-    room.selectPhase = false;
-
-    // send a message to the room with the new room state (started)
-    io.to(roomId).emit("game_started", {
-      roomState: room,
-    });
-    console.log("Game started");
-    await delay(TURN_DURATION);
-    for (let i = 1; i < PLAYERS_IN_ROOM; i++) {
-      console.log("next turn");
-
-      room.activeTurn++;
-      io.to(roomId).emit("new_turn", {
-        roomState: room,
-      });
-      await delay(TURN_DURATION + PREVIEW_DURATION);
-    }
-    room.activeTurn = null;
-    room.isCompleted = true;
-    console.dir(room, {
-      depth: 6,
-    });
-    io.to(roomId).emit("game_finished", {
-      roomState: room,
-    });
-    console.log("game finished");
-    room.players.forEach((user) => {
-      user.ready = false;
-    });
-    io.to(roomId).emit("game_over", {
-      roomState: room,
-    });
-  });
-
-  socket.on("back_lobby", async (data) => {
-    const room = rooms.get(roomId);
-    const lobby = playersInLobby.get(roomId);
-
-    if (!lobby?.has(socket.id)) lobby.add(socket.id);
->>>>>>> Stashed changes
-
-    room.gameOver = false;
-    room.isCompleted = false;
-    io.to(socket.id).emit("reset", {
-      roomState: room,
-    });
-
-    if (lobby.size == 4) {
-      room.players.forEach((user) => {
-        user.sequencer = {
-          instrumentId: null,
-          selectionGrid: null,
-        };
-      });
-      io.to(roomId).emit("update_lobby", { fullLobby: true });
-    }
-  });
-
-  // Broadcast updates to players' sequencers
-  socket.on("update", ({ selectionGrid }) => {
-    const room = rooms.get(roomId);
-    const player = room.players.find((p) => p.id == socket.id);
-    player.sequencer.selectionGrid = selectionGrid;
-  });
-
-  socket.on("disconnect", (reason) => {
-    const room = rooms.get(roomId);
-    const lobby = playersInLobby.get(roomId);
-    if (room) {
-      // If we're the last player to leave the room
-      if (room.players.length == 1) {
-        rooms.delete(roomId);
-        if (lobby) playersInLobby.delete(roomId);
-      }
-
-      if (lobby && lobby.has(socket.id)) {
-        lobby.delete(socket.id);
-      }
-
-      // Remove this player's entry from the room
-      room.players = room.players.filter((p) => p.id != socket.id);
-      room.players = room.players.map((p, i) => {
-        return {
-          ...p,
-          turnNumber: i + 1,
-        };
-      });
-    }
-    if (lobby)
-      socket.broadcast.to(roomId).emit("player_left", {
-        roomState: room,
-        fullLobby: lobby.size == 4 ? true : false,
-      });
-    else
-      socket.broadcast
-        .to(roomId)
-        .emit("player_left", { roomState: room, fullLobby: false });
-  });
-});
-// * * * * * * * * * * Socket logic * * * * * * * * * *
+            if (lobby && lobby.has(socket.id)) {
+                lobby.delete(socket.id)
+            }
+            
+            // Remove this player's entry from the room
+            room.players = room.players.filter((p) => p.id != socket.id)
+            room.players = room.players.map((p, i) => {
+                return {
+                    ...p,
+                    turnNumber: i + 1
+                }
+            })
+        }
+        if (lobby)
+            socket.broadcast.to(roomId).emit("player_left", { roomState: room, fullLobby: lobby.size==4 ? true : false })
+        else
+            socket.broadcast.to(roomId).emit("player_left", { roomState: room, fullLobby: false })
+    })
+})
+// * * * * * * * * * * Socket logic * * * * * * * * * * 
 
 httpServer.listen(PORT, () => {
   console.log("Server listening on port", PORT);
