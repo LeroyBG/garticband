@@ -105,13 +105,14 @@ const io = new Server(httpServer, {
 })
 
 io.on("connection", (socket) => {
-    console.log("client connected")
+    console.log("Client succesfully established connection with central server")
 
     // establish the room ID holder
     let roomId: roomId|null = null
 
     socket.on("join_room", (data) => {
-        console.log("someone is trying to join a room")
+        console.log("Client is trying to join a room with following room ID and name:")
+        console.log(data)
         
         // server now holds roomId for specific client
         roomId = data.roomId
@@ -119,7 +120,7 @@ io.on("connection", (socket) => {
 
         // If the room doesn't exist, create it
         if (!room) {
-            console.log("room doesn't exist so we create it")
+            console.log("Room doesn't exist yet so we create a new room")
             const player: playerInRoom = {
                 turnNumber: 1,
                 id: socket.id,
@@ -150,7 +151,7 @@ io.on("connection", (socket) => {
                     playerAlreadyInRoomDataStructure = true
             })
             if (room.players.length >= PLAYERS_IN_ROOM) {
-                console.log("someone tried to join a room that's full")
+                console.log("Client tried to join a room that's full which should fail")
                 return
             }
 
@@ -185,6 +186,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("change_ready", async (data) => {
+        console.log("Server received request from player to change ready status")
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
         player.ready = !player.ready
@@ -197,6 +199,7 @@ io.on("connection", (socket) => {
 
     // add reciever for dealing with instrument selection
     socket.on("start_select", async (data) => {
+        console.log("Player has initiated instrument select phase")
         const room = rooms.get(roomId)
         room.selectPhase = true
         let i = Math.floor(Math.random() * 4)
@@ -216,6 +219,7 @@ io.on("connection", (socket) => {
         const room = rooms.get(roomId)
         let player = room.players.find(p => p.id == socket.id)
         player.sequencer.instrumentId = id
+        console.log("Player " + player.name + " chose instrument " + id)
 
         io.to(roomId).emit("update_instrument", {
             newRoomState: room, instrument: id
@@ -223,6 +227,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("start_game", async (data) => {
+        console.log("All players have selected instruments and requested to start game")
         // retrieve the correct room 
         const room = rooms.get(roomId)
         room.activeTurn = 1
@@ -232,7 +237,7 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("game_started", {
             roomState: room
         })
-        console.log("Game started")
+        console.log("Game started and notified to all clients in the room")
         await delay(TURN_DURATION)
         for (let i = 1; i < PLAYERS_IN_ROOM; i++) {
             console.log("next turn")
@@ -251,16 +256,19 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("game_finished", {
             roomState: room
         })
-        console.log("game finished")
+        console.log("Game finished and notified to all clients in the room")
         room.players.forEach(user => {
             user.ready = false
         })
         io.to(roomId).emit("game_over", {
             roomState: room
         })
+        console.log("Changed ready status for all players and notified")
+        console.log(room)
     })
 
     socket.on("back_lobby", async (data) => {
+        console.log("Player clicked on Back to Lobby")
         const room = rooms.get(roomId)
         const lobby = playersInLobby.get(roomId)
     
@@ -272,6 +280,7 @@ io.on("connection", (socket) => {
         io.to(socket.id).emit("reset", {
             roomState: room
         })
+        console.log("Changed room status to send specified player back to the lobby page")
 
         if (lobby.size == 4) {
             room.players.forEach(user => {
@@ -282,17 +291,20 @@ io.on("connection", (socket) => {
             })
             io.to(roomId).emit("update_lobby", {fullLobby: true})
         }
-            
+        console.log("All players returned to lobby and reset sequencers for all players")
+        console.log(room)
     })
 
     // Broadcast updates to players' sequencers
     socket.on("update", ({ selectionGrid }) => {
+        console.log("Player clicked on sequencer board")
         const room = rooms.get(roomId)
         const player = room.players.find(p => p.id == socket.id)
         player.sequencer.selectionGrid = selectionGrid
     })
 
     socket.on("disconnect", (reason) => {
+        console.log("Player has disconnected from the room")
         const room = rooms.get(roomId)
         const lobby = playersInLobby.get(roomId)
         if (room) {
