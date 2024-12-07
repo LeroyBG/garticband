@@ -150,7 +150,6 @@
     import AlreadyWent from "$lib/components/AlreadyWent.svelte";
     import WaitingForPlayers from "$lib/components/WaitingForPlayers.svelte";
     import FinalComposition from "$lib/components/FinalComposition.svelte";
-    import GameOver from "$lib/components/GameOver.svelte";
 
     // Types
     import { type playerInRoom, type roomInfo, type instrumentId } from "$lib/types";
@@ -193,7 +192,6 @@
     let roomReadyToStart = $derived<boolean>(!roomState.activeTurn && roomState.players.length == 4 && roomState.players.every(p => p.ready === true))
     let gameActive = $derived<boolean>(roomState.activeTurn != null)
     let gameFinished = $derived<boolean>(roomState.isCompleted)
-    let gameOver = $derived<boolean>(roomState.gameOver)
 
     let upNext = $derived<boolean|null>(
         (roomState.activeTurn && me?.turnNumber) ? 
@@ -249,27 +247,36 @@
 
         // * * * Setup socket stuff
         io.on("room_joined", (data) => {
+            console.log("Room was successfully joined by a player on the server side with the following data:")
+            console.log(data)
             roomId = data.roomId
             roomState = data.roomState
             fullLobby = data.fullLobby
-            console.log("hello?")
         })
 
         io.on("player_joined", (data) => {
+            console.log("Room was successfully joined by another player on the server side and notifying all clients in the same room")
+            console.log(data)
             roomState = data.roomState
             fullLobby = data.fullLobby
         })
 
         io.on("player_left", (data) => {
+            console.log("Some player has left and roomState was updated in server:")
+            console.log(data)
             roomState = data.roomState
             fullLobby = data.fullLobby
         })
 
         io.on("notify_ready", (data) => {
+            console.log("Ready status was changed for player" )
+            console.log(data.roomState)
             roomState = data.roomState
         })
 
         io.on("select_started", (data) => {
+            console.log("Server successfully initiated instrument select mode with according changes to roomState:")
+            console.log(data)
             roomState = data.roomState
             genre = data.genre
             fullLobby = data.fullLobby
@@ -277,24 +284,33 @@
 
         io.on("update_instrument", 
                 ({newRoomState, instrument}: {newRoomState: roomInfo, instrument: instrumentId}) => {
-            console.log("someone chose " + instrument)
+            console.log("Player " + username + " successfully chose " + instrument)
+            console.log(newRoomState)
             roomState = newRoomState
             takenInstruments[instrument] = true
         })
 
         io.on("game_started", (data) => {
+            console.log("Server successfully transitioning game from instrument select to composing phase")
+            console.log(data.roomState)
             roomState = data.roomState
         })
 
         io.on("new_turn", (data) => {
+            console.log("Server successfully transitioned to next player's turn")
+            console.log(data.roomState)
             roomState = data.roomState
         })
 
         io.on("game_finished", (data) => {
+            console.log("All players turns done and server transitioned to final composition page")
+            console.log(data.roomState)
             roomState = data.roomState
         })
 
         io.on("game_over", (data) => {
+            console.log("Server successfully changed all player's ready status to false after game is over")
+            console.log(data.roomState)
             roomState = data.roomState
             Object.keys(takenInstruments).forEach(key => {
                 takenInstruments[key as keyof typeof takenInstruments] = false
@@ -302,10 +318,13 @@
         })
 
         io.on("update_lobby", (data) => {
+            console.log("Server successfully reset all sequencers and notify players that everyone is in the lobby")
             fullLobby = data.fullLobby
         })
 
         io.on("reset", (data) => {
+            console.log("Server successfully changed game state back to lobby mode for designated player that pressed Back to Lobby")
+            console.log(data.roomState)
             roomState = data.roomState
         })
 

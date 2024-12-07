@@ -1,3 +1,8 @@
+<!--
+  @component
+
+  Composer to provide sound feedback. Helper class for Sequencer.
+-->
 <script lang="ts">
 
     const {
